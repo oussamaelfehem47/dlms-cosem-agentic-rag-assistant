@@ -1,0 +1,55 @@
+{
+  "name": "dlms.parse_hdlc",
+  "description": "Parse a raw DLMS/COSEM HDLC frame from hex string. Returns all frame fields including addresses, control field, and CRC validation. This is always the first step in DLMS frame decoding.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "frame_hex": {
+        "type": "string",
+        "description": "Complete HDLC frame as hex string. Must start and end with 7E flag. Spaces and colons are stripped automatically.",
+        "minLength": 14,
+        "maxLength": 8192,
+        "pattern": "^[0-9A-Fa-f\\s:]+$"
+      }
+    },
+    "required": ["frame_hex"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "frame_type": {"type": "string"},
+      "frame_length": {"type": "integer"},
+      "dest_address": {
+        "type": "object",
+        "properties": {
+          "raw": {"type": "string"},
+          "value": {"type": "integer"},
+          "bytes": {"type": "integer"}
+        }
+      },
+      "src_address": {
+        "type": "object",
+        "properties": {
+          "raw": {"type": "string"},
+          "value": {"type": "integer"},
+          "bytes": {"type": "integer"}
+        }
+      },
+      "control": {
+        "type": "object",
+        "properties": {
+          "raw": {"type": "string"},
+          "type": {"type": "string", "enum": ["I", "S", "U"]},
+          "decoded": {"type": "object"}
+        }
+      },
+      "hcs_valid": {"type": "boolean"},
+      "fcs_valid": {"type": "boolean"},
+      "information_hex": {"type": "string"},
+      "information_length": {"type": "integer"},
+      "errors": {"type": "array", "items": {"type": "string"}},
+      "warnings": {"type": "array", "items": {"type": "string"}}
+    },
+    "required": ["hcs_valid", "fcs_valid", "errors", "warnings"]
+  }
+}

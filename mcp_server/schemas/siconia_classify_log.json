@@ -1,0 +1,30 @@
+{
+  "name": "siconia.classify_log",
+  "description": "Classify a multi-line DCU/HES log block by communication layer (WAN/PLC/RF/HES/DLMS) and event type. Returns a structured summary with alarm codes and severity distribution.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "log_text": {
+        "type": "string",
+        "description": "Raw DCU/HES log block, multi-line.",
+        "minLength": 1,
+        "maxLength": 524288
+      }
+    },
+    "required": ["log_text"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "total_lines": {"type": "integer"},
+      "layers": {"type": "object"},
+      "event_types": {"type": "object"},
+      "severities": {"type": "object"},
+      "alarm_codes_found": {"type": "array", "items": {"type": "string"}},
+      "meters_mentioned": {"type": "array", "items": {"type": "string"}},
+      "critical_entries": {"type": "array"},
+      "error_entries": {"type": "array"}
+    },
+    "required": ["total_lines", "layers", "severities"]
+  }
+}

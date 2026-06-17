@@ -1,0 +1,41 @@
+{
+  "name": "dlms.resolve_obis",
+  "description": "Resolve an OBIS code to its Interface Class, attribute definitions, and measurement semantics. Uses the DLMS Knowledge Graph for exact lookup with structural decode fallback.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "obis_str": {
+        "type": "string",
+        "description": "OBIS code in A.B.C.D.E.F notation, e.g. '1.0.1.8.0.255'",
+        "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+$"
+      }
+    },
+    "required": ["obis_str"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "obis": {"type": "string"},
+      "resolved": {"type": "boolean"},
+      "description": {"type": "string"},
+      "interface_class": {
+        "type": ["object", "null"],
+        "properties": {
+          "id": {"type": "integer"},
+          "name": {"type": "string"}
+        }
+      },
+      "structural_decode": {
+        "type": "object",
+        "properties": {
+          "medium": {"type": "string"},
+          "channel": {"type": "string"},
+          "quantity": {"type": "string"},
+          "measurement_type": {"type": "string"},
+          "billing_period": {"type": "string"}
+        }
+      }
+    },
+    "required": ["obis", "resolved"]
+  }
+}

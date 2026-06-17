@@ -1,0 +1,19 @@
+spring:
+  # Overrides for Docker environment
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:dlms_assistant}
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:dlms_assistant}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  ai:
+    ollama:
+      # In Docker, we use host.docker.internal to reach Ollama on the Windows host
+      base-url: http://${OLLAMA_HOST:host.docker.internal}:${OLLAMA_PORT:11434}
+
+# JSON logging for Docker (production-ready)
+logging:
+  config: classpath:logback-spring.xml

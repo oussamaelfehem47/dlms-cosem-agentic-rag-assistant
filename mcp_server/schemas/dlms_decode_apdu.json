@@ -1,0 +1,39 @@
+{
+  "name": "dlms.decode_apdu",
+  "description": "Extract LLC header and classify APDU type from the HDLC information field hex. Call after dlms.parse_hdlc using the information_hex output.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "information_hex": {
+        "type": "string",
+        "description": "HDLC information field as hex string (LLC header + APDU). From information_hex field of dlms.parse_hdlc output.",
+        "minLength": 6,
+        "maxLength": 8192,
+        "pattern": "^[0-9A-Fa-f\\s]+$"
+      }
+    },
+    "required": ["information_hex"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "llc": {
+        "type": "object",
+        "properties": {
+          "dst_lsap": {"type": "string"},
+          "src_lsap": {"type": "string"},
+          "quality": {"type": "string"},
+          "is_dlms": {"type": "boolean"}
+        }
+      },
+      "apdu_type": {"type": "string"},
+      "apdu_tag": {"type": "string"},
+      "description": {"type": "string"},
+      "sub_type": {"type": "string"},
+      "payload_hex": {"type": "string"},
+      "payload_length": {"type": "integer"},
+      "warnings": {"type": "array", "items": {"type": "string"}}
+    },
+    "required": ["apdu_type", "payload_hex", "warnings"]
+  }
+}

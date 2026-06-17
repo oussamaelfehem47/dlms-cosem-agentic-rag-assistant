@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:1
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /mcp
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY mcp_server/requirements.mcp.txt /mcp/requirements.mcp.txt
+RUN pip install --no-cache-dir --retries 10 --timeout 120 --upgrade pip && \
+    pip install --no-cache-dir --retries 10 --timeout 120 -r /mcp/requirements.mcp.txt
+
+# Copy server and tool implementations
+COPY mcp_server/ /mcp/
+
+RUN mkdir -p /mcp/logs
+
+EXPOSE 8001
+
+CMD ["python", "server.py"]

@@ -1,0 +1,53 @@
+{
+  "name": "siconia.parse_xml",
+  "description": "Sanitize and parse a SICONIA HES/DCU XML trace. Extracts sessions, events, alarms, and errors. Returns a structured summary safe for LLM context injection.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "xml_content": {
+        "type": "string",
+        "description": "Raw SICONIA XML trace content.",
+        "minLength": 10,
+        "maxLength": 524288
+      }
+    },
+    "required": ["xml_content"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "sessions": {"type": "integer"},
+      "total_events": {"type": "integer"},
+      "alarm_count": {"type": "integer"},
+      "error_count": {"type": "integer"},
+      "alarms": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "code": {"type": "string"},
+            "severity": {"type": "string"},
+            "ts": {"type": "string"}
+          }
+        }
+      },
+      "errors": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {"type": "string"},
+            "code": {"type": "string"},
+            "desc": {"type": "string"},
+            "ts": {"type": "string"}
+          }
+        }
+      },
+      "layers_seen": {"type": "array", "items": {"type": "string"}},
+      "meters_seen": {"type": "array", "items": {"type": "string"}},
+      "parse_errors": {"type": "array", "items": {"type": "string"}},
+      "warnings": {"type": "array", "items": {"type": "string"}}
+    },
+    "required": ["sessions", "total_events", "alarm_count"]
+  }
+}

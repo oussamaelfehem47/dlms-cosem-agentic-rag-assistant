@@ -1,0 +1,30 @@
+{
+  "name": "siconia.decode_alarm",
+  "description": "Decode a SICONIA DCU alarm code to its root cause, severity, and remediation steps. Accepts hex string format (0x1342) or integer.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "alarm_code": {
+        "type": "string",
+        "description": "Alarm code as hex string (e.g. '0x1342') or decimal string.",
+        "pattern": "^(0x[0-9A-Fa-f]+|\\d+)$"
+      }
+    },
+    "required": ["alarm_code"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "code_hex": {"type": "string"},
+      "code_int": {"type": "integer"},
+      "resolved": {"type": "boolean"},
+      "source": {"type": ["string", "null"]},
+      "category": {"type": ["string", "null"]},
+      "severity": {"type": "string"},
+      "description": {"type": ["string", "null"]},
+      "root_causes": {"type": "array", "items": {"type": "string"}},
+      "remediation": {"type": "array", "items": {"type": "string"}}
+    },
+    "required": ["code_hex", "resolved", "severity"]
+  }
+}

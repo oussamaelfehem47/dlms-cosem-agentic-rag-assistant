@@ -1,0 +1,8 @@
+docling
+psycopg2-binary
+requests
+python-dotenv
+click
+pytest
+pytest-mock
+beautifulsoup4

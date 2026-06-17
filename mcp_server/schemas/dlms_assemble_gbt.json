@@ -1,0 +1,44 @@
+{
+  "name": "dlms.assemble_gbt",
+  "description": "Reassemble a complete DLMS profile from multiple GBT (General Block Transfer) blocks and decode the result. All blocks must be provided at once — state management is the caller's responsibility.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "blocks": {
+        "type": "array",
+        "description": "All GBT blocks for this transfer, in any order (will be sorted by block_number).",
+        "minItems": 1,
+        "maxItems": 255,
+        "items": {
+          "type": "object",
+          "properties": {
+            "block_number": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 255
+            },
+            "last_block": {"type": "boolean"},
+            "data_hex": {
+              "type": "string",
+              "pattern": "^[0-9A-Fa-f\\s]+$"
+            }
+          },
+          "required": ["block_number", "last_block", "data_hex"]
+        }
+      }
+    },
+    "required": ["blocks"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "assembled_hex": {"type": "string"},
+      "assembled_bytes": {"type": "integer"},
+      "block_count": {"type": "integer"},
+      "axdr_decoded": {"type": ["object", "null"]},
+      "axdr_error": {"type": ["string", "null"]},
+      "errors": {"type": "array", "items": {"type": "string"}}
+    },
+    "required": ["block_count", "errors"]
+  }
+}

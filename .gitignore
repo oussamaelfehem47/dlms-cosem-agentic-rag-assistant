@@ -1,0 +1,58 @@
+# Secrets
+.env
+backend/.env
+rag/**/.env
+
+# Java build output
+backend/target/
+backend/cp.txt
+*.class
+*.jar
+*.war
+
+# Frontend build output
+ui/node_modules/
+ui/dist/
+ui/playwright-report/
+ui/test-results/
+ui/e2e/.auth/
+ui/cypress/screenshots/
+ui/cypress/videos/
+
+# Python
+**/__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+rag/ingestion/.venv/
+rag/ingestion/*.egg-info/
+
+# Planning / agent folders
+.specify/
+.claude/
+
+# Local docs and private project assets
+docs/
+report/
+specs/
+confluence/
+knowledge_packs/
+tmp/
+scratch/
+
+# Large document files
+rag/documents/
+*.pdf
+*.docx
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Logs
+*.log
+logs/
+
+# Docker overrides
+docker-compose.override.yml

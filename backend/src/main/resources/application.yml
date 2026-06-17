@@ -1,0 +1,102 @@
+spring:
+  application:
+    name: dlms-assistant
+  
+  sql:
+    init:
+      mode: always
+  
+  # Reactive R2DBC configuration
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:dlms_assistant}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    pool:
+      initial-size: 5
+      max-size: 20
+      max-life-time: 30m
+
+  # Blocking JDBC configuration (for PgVectorStore)
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:dlms_assistant}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  # Spring AI Ollama configuration
+  ai:
+    ollama:
+      base-url: http://${OLLAMA_HOST:localhost}:${OLLAMA_PORT:11434}
+      chat:
+        model: ${OLLAMA_LLM_MODEL:lfm2.5-thinking}
+      embedding:
+        model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 384
+        initialize-schema: false
+
+  # File processing limits
+  codec:
+    max-in-memory-size: 10MB
+
+# Server configuration
+server:
+  port: 8000
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,text/event-stream
+
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      base-path: /api/actuator
+      exposure:
+        include: health,prometheus,metrics,info
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+
+# Security & JWT
+dlms:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:secret_must_be_at_least_32_characters_long_for_hs256}
+      expiration: ${JWT_EXPIRY_MS:3600000}
+      refresh-expiration: ${REFRESH_EXPIRY_MS:2592000000}
+    audit:
+      secret: ${AUDIT_HMAC_KEY:audit-secret-key-1234567890abcdefghij}
+    session:
+      encryption-key: ${SESSION_ENCRYPTION_KEY:dlmsassistant16c}
+  memory:
+    stm-table: ${DLMS_STM_TABLE:stm_entries}
+    narrative-table: ${DLMS_NARRATIVE_TABLE:episodic_blocks}
+    narrative-limit: ${DLMS_NARRATIVE_LIMIT:10}
+
+# RAG hybrid retrieval configuration
+rag:
+  retrieval:
+    vector-weight: 0.7
+    bm25-weight: 0.3
+    default-top-k: 10
+    similarity-threshold: 0.5
+
+# MCP server configuration
+mcp:
+  server:
+    url: ${MCP_SERVER_URL:http://mcp-server:8001}
+    timeout-seconds: 10
+
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    com.company.dlms: DEBUG
+    org.springframework.data.r2dbc: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

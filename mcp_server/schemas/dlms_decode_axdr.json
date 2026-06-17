@@ -1,0 +1,33 @@
+{
+  "name": "dlms.decode_axdr",
+  "description": "Recursively decode AXDR-encoded DLMS attribute data from hex. Handles all primitive types, structures, and arrays. Returns a typed value tree.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "axdr_hex": {
+        "type": "string",
+        "description": "AXDR-encoded data as hex string.",
+        "minLength": 2,
+        "maxLength": 65536,
+        "pattern": "^[0-9A-Fa-f\\s]+$"
+      },
+      "offset": {
+        "type": "integer",
+        "description": "Byte offset to start decoding from. Default 0.",
+        "minimum": 0,
+        "default": 0
+      }
+    },
+    "required": ["axdr_hex"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "type": {"type": "string"},
+      "tag": {"type": "string"},
+      "value": {},
+      "children": {"type": "array"}
+    },
+    "required": ["type", "tag"]
+  }
+}
