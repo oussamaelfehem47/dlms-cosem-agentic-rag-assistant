@@ -1,153 +1,185 @@
 # DLMS/COSEM Hybrid Agentic RAG Assistant
 
-An offline assistant for DLMS/COSEM protocol analysis and SICONIA HES/DCU troubleshooting. The platform combines deterministic Java decoding, hybrid retrieval, session memory, anomaly detection, and bounded LLM planning so engineers can investigate frames, payloads, alarms, XML traces, and support documentation inside controlled environments.
+An offline assistant for **DLMS/COSEM protocol analysis** and **SICONIA HES/DCU troubleshooting**.  
+It combines deterministic Java decoding, hybrid retrieval, session memory, anomaly detection, and bounded LLM planning so engineers can investigate frames, payloads, alarms, traces, and support knowledge inside controlled environments.
 
-## Current Snapshot
+## Why this project exists
 
-- 5-container Docker deployment: `dlms-ui`, `dlms-nginx`, `dlms-backend`, `dlms-postgres`, `dlms-mcp-server`
-- Ollama runs on the host machine, not inside Docker
-- Default local chat model: `qwen2.5:3b`
-- Hybrid orchestration with 4 modes:
-  - `DETERMINISTIC_FAST_PATH`
-  - `STRUCTURED_PLUS_AGENTIC`
-  - `NATURAL_LANGUAGE_AGENTIC`
-  - `AMBIGUOUS_SAFE_FALLBACK`
-- Session follow-ups use `SESSION_RECALL` as a first-class strategy
-- Knowledge Graph: `51 nodes`, `28 edges`
-- Retrieval corpus: `8,659 DLMS` chunks + `2,516 Confluence` chunks
-- Hybrid retrieval weighting: `0.7 x vector + 0.3 x BM25`
-- Anomaly detection includes 8 rules for replay, security, association, and PDU integrity checks
+Field troubleshooting for smart metering systems usually involves two problems at once:
 
-## What The Assistant Can Do
+- protocol data must be decoded correctly
+- operational knowledge is scattered across logs, traces, standards, and internal support material
 
-- Decode HDLC, APDU, AXDR, and OBIS content with deterministic Java logic
-- Analyze SICONIA alarm codes, XML traces, and operational logs
-- Answer DLMS documentation and security questions with grounded retrieval
-- Persist session memory for follow-up questions such as previous frame type or last OBIS
-- Show a safe `How I answered` trace with orchestration mode, strategy, tools used, and trust level
-- Support RBAC, conversation persistence, exports, admin monitoring, and audit logging
+This project brings both into one local system:
 
-## Why This Is A Hybrid Agentic RAG System
+- deterministic parsers provide protocol truth
+- retrieval provides grounded evidence
+- the LLM explains only what the system can support
 
-The system is intentionally split into two layers:
+## What makes it hybrid agentic RAG
 
-- Deterministic protocol truth:
-  HDLC parsing, APDU classification, AXDR decoding, OBIS resolution, XML parsing, alarm decoding, and anomaly detection are implemented in code and remain authoritative.
-- Agentic grounded explanation:
-  the LLM plans retrieval and memory access for natural-language or mixed prompts, then explains only facts that are supported by deterministic results or retrieved evidence.
+This assistant is not a generic chatbot and not just a parser.
 
-This keeps protocol-critical interpretation safe while still making the assistant conversational and context-aware.
+- **Deterministic truth layer**
+  HDLC, APDU, AXDR, OBIS, XML, log, and alarm interpretation are handled by code and remain authoritative.
+- **Agentic reasoning layer**
+  the planner can decide when to use retrieval, session memory, or deterministic tools for natural-language and mixed prompts.
+- **Grounded answer layer**
+  final answers are constrained by deterministic results and retrieved evidence instead of free-form guessing.
 
-## Runtime Topology
+## Current validated snapshot
 
-```text
-Browser
-  -> dlms-nginx :3000
-     -> /      -> dlms-ui :80
-     -> /api/* -> dlms-backend :8000
+- **Deployment:** 5 containers
+  `dlms-ui`, `dlms-nginx`, `dlms-backend`, `dlms-postgres`, `dlms-mcp-server`
+- **Model runtime:** Ollama on host, not inside Docker
+- **Default local model:** `qwen2.5:3b`
+- **Knowledge Graph:** 51 nodes, 28 edges
+- **Retrieval corpus:** 8,659 DLMS chunks + 2,516 Confluence chunks
+- **Hybrid retrieval weighting:** `0.7 x vector + 0.3 x BM25`
+- **Anomaly detection:** 8 runtime rules
+- **Automated tests:** 644 backend + 87 frontend unit tests
 
-dlms-backend
-  -> dlms-postgres :5432
-  -> dlms-mcp-server :8001
-  -> Ollama on host
+## Architecture overview
 
-rag/ ingestion pipeline
-  -> dlms-postgres
+```mermaid
+flowchart LR
+    U[Browser] --> N[dlms-nginx :3000]
+    N --> UI[dlms-ui :80]
+    N --> BE[dlms-backend :8000]
+    BE --> DB[(dlms-postgres :5432)]
+    BE --> MCP[dlms-mcp-server :8001]
+    BE -. host .-> OL[Ollama]
+    RAG[rag ingestion pipeline] --> DB
 ```
 
-## Orchestration Modes
+## Orchestration modes
 
-### 1. Deterministic Fast Path
+| Mode | When it is used | Typical examples |
+| --- | --- | --- |
+| `DETERMINISTIC_FAST_PATH` | The input is clearly a frame, APDU, AXDR value, alarm, XML trace, log block, or OBIS lookup | `7EA00A030383CD6F7E`, `C4020109060100010800FF`, `0x1342` |
+| `STRUCTURED_PLUS_AGENTIC` | A strong structured payload is combined with a natural-language request | `Decode APDU C4020109060100010800FF and explain what object was returned` |
+| `NATURAL_LANGUAGE_AGENTIC` | The input is a pure question or follow-up | `What is AARQ in DLMS?`, `what OBIS code was in the last response?` |
+| `AMBIGUOUS_SAFE_FALLBACK` | Multiple interpretations are plausible and the system should not guess | malformed or mixed structured inputs |
 
-Used when the input is clearly a payload or structured artifact, for example:
+## Core capabilities
 
-- raw HDLC frame
-- direct APDU such as `C4020109060100010800FF`
-- AXDR primitive such as `00` or `03 01`
-- direct alarm code such as `0x1342`
-- XML trace or multi-line operational log
+### Deterministic DLMS analysis
 
-The backend executes the deterministic tool immediately, then adds a grounded explanation layer when appropriate.
+- HDLC frame parsing
+- APDU classification
+- AXDR primitive and structure decoding
+- OBIS resolution
+- GBT-aware decoding support
 
-### 2. Structured Plus Agentic
+### SICONIA troubleshooting
 
-Used when the user provides a strong structured input plus a natural-language request, for example:
+- alarm code decoding
+- XML trace parsing
+- multi-line log classification
+- operational remediation hints
 
-- `7EA00A030383CD6F7E what does this do?`
-- `Decode APDU C4020109060100010800FF and explain what object was returned`
+### Agentic assistance
 
-The deterministic result comes first. The planner may then use retrieval or session tools to enrich the answer.
+- documentation and security Q&A
+- session-aware follow-up resolution
+- persisted conversation memory
+- safe `How I answered` trace with mode, strategy, tools, and trust
 
-### 3. Natural-Language Agentic
+### Platform features
 
-Used for pure questions such as:
+- JWT authentication and RBAC
+- admin panel for users, feedback, health, and reflection stats
+- conversation persistence, search, and export
+- upload support for analysis workflows
 
-- `What is AARQ in DLMS?`
-- `How does replay protection work?`
-- `what OBIS code was in the last response?`
+## Example prompts
 
-The planner chooses the best internal tools, typically retrieval and session memory, before answer generation.
-
-### 4. Ambiguous Safe Fallback
-
-Used when the input could match multiple structured families and the backend does not have enough evidence to pick one safely. In that case, the system refuses to guess.
-
-## Main Components
-
-### `backend/`
-
-Reactive Spring Boot application with orchestration, streaming APIs, deterministic decode logic, grounded answer shaping, auth, audit logging, persistence, and admin endpoints.
-
-### `ui/`
-
-React + Ionic frontend with chat, decode panels, `How I answered` trace, session persistence, search, export, RBAC-aware admin pages, and upload support.
-
-### `mcp_server/`
-
-FastAPI MCP transport exposing deterministic DLMS and SICONIA tools.
-
-### `rag/`
-
-Offline ingestion pipeline for chunking, embedding, weighting, and loading DLMS plus Confluence knowledge into PostgreSQL/pgvector.
-
-## Repository Layout
+### Deterministic decode
 
 ```text
-.
-|-- backend/
-|-- ui/
-|-- mcp_server/
-|-- rag/
-|-- docker-compose.yml
-`-- README.md
+7EA00A030383CD6F7E
 ```
 
-## Quick Start
+```text
+C4020109060100010800FF
+```
+
+```text
+00
+```
+
+### Mixed decode + explanation
+
+```text
+7EA00A030383CD6F7E what does this do?
+```
+
+```text
+Decode APDU C4020109060100010800FF and explain what object was returned.
+```
+
+### Natural-language grounded questions
+
+```text
+What is the difference between AARQ and AARE in DLMS?
+```
+
+```text
+How does replay protection work in DLMS?
+```
+
+```text
+what OBIS code was in the last response?
+```
+
+### SICONIA
+
+```text
+0x1342
+```
+
+```text
+Analyze and explain this SICONIA alarm in context, and suggest remediation: 0x1342
+```
+
+## Technology stack
+
+| Layer | Stack |
+| --- | --- |
+| Backend | Java 25, Spring Boot 3.4.4, Spring WebFlux, LangGraph4j |
+| Frontend | React, Ionic, TypeScript, Vite |
+| Database | PostgreSQL, pgvector, R2DBC |
+| Retrieval | vector search + BM25 |
+| Tool surface | Python FastAPI MCP server |
+| Ingestion | Python offline chunking and embedding pipeline |
+| Infra | Docker Compose, Nginx, Ollama |
+
+## Quick start
 
 ### Prerequisites
 
 - Docker Desktop
 - Java 25
 - Maven 3.9+
-- Node 20+ for local frontend development
+- Node 20+ for local UI development
 - Ollama installed on the host
 
-Install the required Ollama models on the host:
+### 1. Pull the local models
 
 ```powershell
 ollama pull qwen2.5:3b
 ollama pull nomic-embed-text
 ```
 
-### 1. Create the backend environment file
+### 2. Create the backend environment file
 
 ```powershell
 Copy-Item backend/.env.example backend/.env
 ```
 
-Update the secrets in `backend/.env` before using the stack outside local development.
+Then update the secrets in `backend/.env`.
 
-### 2. Package the backend
+### 3. Package the backend
 
 ```powershell
 cd backend
@@ -155,13 +187,13 @@ mvn clean package -DskipTests
 cd ..
 ```
 
-### 3. Start the stack
+### 4. Start the full stack
 
 ```powershell
 docker-compose up --build -d
 ```
 
-### 4. Verify
+### 5. Verify the deployment
 
 ```powershell
 docker ps
@@ -169,14 +201,14 @@ curl http://localhost:3000/api/actuator/health
 curl http://localhost:3000/api/mcp/health
 ```
 
-### Main URLs
+### Main endpoints
 
 - App: `http://localhost:3000`
-- Health: `http://localhost:3000/api/actuator/health`
+- Backend health: `http://localhost:3000/api/actuator/health`
 - MCP health: `http://localhost:3000/api/mcp/health`
-- PostgreSQL host port: `localhost:5433`
+- PostgreSQL host access: `localhost:5433`
 
-## Development Commands
+## Development
 
 ### Backend
 
@@ -193,38 +225,42 @@ npm install
 npm run dev
 ```
 
-## Test Status
-
-- Backend automated suite: `644` tests passing
-- Frontend unit suite: `87` tests passing
-
-Typical commands:
+### Frontend unit tests
 
 ```powershell
-cd backend
-mvn clean test
-
-cd ../ui
+cd ui
 npm run test.unit -- --run
 ```
 
-The frontend repository also contains Cypress and Playwright coverage for browser scenarios.
+The UI repo also includes Cypress and Playwright coverage for browser workflows.
 
-## Security And Deployment Notes
+## Repository layout
 
-- Runtime is designed for offline or restricted-network environments
-- Deterministic parsing is never delegated to the LLM
-- JWT auth, RBAC, audit logging, and output filtering are part of the default stack
+```text
+.
+|-- backend/       Spring Boot backend, orchestration, APIs, tests
+|-- ui/            React + Ionic frontend
+|-- mcp_server/    FastAPI MCP transport and tool exposure
+|-- rag/           Offline ingestion pipeline
+|-- docker-compose.yml
+`-- README.md
+```
+
+## Security and design invariants
+
+- no cloud dependency is required at runtime
+- deterministic protocol parsing is never delegated to the LLM
+- JWT auth, RBAC, audit logging, and output filtering are built in
 - `SESSION_ENCRYPTION_KEY` must remain exactly 16 characters
-- Ollama is intentionally external to Docker so the deployment can reuse a stronger local or enterprise model later without changing the application containers
+- Ollama is intentionally external to Docker so the system can later switch to a stronger local or enterprise model without redesigning the application containers
 
-## Public Snapshot Notes
+## Public snapshot note
 
-This public code snapshot intentionally excludes private or bulky project assets such as:
+This public repository intentionally excludes private or bulky project assets such as:
 
 - report sources and generated PDFs
 - internal docs and specs
-- Confluence exports and processed knowledge packs
-- local auth state, build outputs, crash logs, and virtual environments
+- offline Confluence exports and processed knowledge packs
+- local auth state, build artifacts, crash logs, and virtual environments
 
-The goal is to keep the repository focused on the runnable codebase.
+The repository is kept focused on the runnable codebase.
