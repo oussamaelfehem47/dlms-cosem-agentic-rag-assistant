@@ -21,7 +21,7 @@ public final class NaturalLanguageRoutingNormalizer {
 
     private static final Set<String> ROUTING_VOCABULARY = Set.of(
             "what", "how", "why", "explain", "describe", "tell", "can", "does", "did",
-            "difference", "differences", "define",
+            "difference", "differences", "define", "artifact", "compare",
             "mean", "frame", "response", "returned", "connection", "established", "last", "previous",
             "obis", "dlms", "hdlc", "apdu", "axdr", "aarq", "aare", "hls", "lls", "gmac",
             "replay", "security", "suite"
@@ -33,6 +33,7 @@ public final class NaturalLanguageRoutingNormalizer {
             Map.entry("deos", "does"),
             Map.entry("repsonse", "response"),
             Map.entry("fram", "frame"),
+            Map.entry("artifat", "artifact"),
             Map.entry("conection", "connection"),
             Map.entry("esablished", "established"),
             Map.entry("diference", "difference"),

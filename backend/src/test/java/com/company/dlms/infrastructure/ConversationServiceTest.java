@@ -278,4 +278,50 @@ class ConversationServiceTest {
                 })
                 .verifyComplete();
     }
+
+    @Test
+    void getConversationWithMessages_roundTripsArtifactResultsJson() {
+        Instant createdAt = Instant.parse("2026-05-15T09:00:00Z");
+        Conversation conversation = new Conversation(CONVERSATION_ID, USER_ID, "Conversation", createdAt);
+        String artifactResultsJson = """
+                [{"artifactId":"artifact-1","index":0,"source":"ATTACHMENT","filename":"frame.hex","rawInput":"7EA00A030383CD6F7E","inputClass":"HEX_FRAME","intent":"FRAME_DECODE","explanation":"Frame decoded."}]
+                """.trim();
+        Message persistedMessage = new Message(
+                UUID.randomUUID(),
+                CONVERSATION_ID,
+                "assistant",
+                "query",
+                "UNKNOWN",
+                "Decode these",
+                null,
+                Json.of(artifactResultsJson),
+                null,
+                "STRUCTURED_PLUS_AGENTIC",
+                Boolean.TRUE,
+                null,
+                null,
+                "Batch explanation",
+                "session-batch",
+                false,
+                null,
+                null,
+                createdAt.plusSeconds(30)
+        );
+
+        when(conversationRepository.findByConversationIdAndUserId(CONVERSATION_ID, USER_ID))
+                .thenReturn(Mono.just(conversation));
+        when(conversationRepository.existsById(CONVERSATION_ID)).thenReturn(Mono.just(true));
+        when(messageRepository.findByConversationIdOrderByTimestampAsc(CONVERSATION_ID))
+                .thenReturn(Flux.just(persistedMessage));
+
+        StepVerifier.create(conversationService.getConversationWithMessages(CONVERSATION_ID, USER_ID))
+                .assertNext(response -> {
+                    assertThat(response.messages()).hasSize(1);
+                    MessageResponse message = response.messages().get(0);
+                    assertThat(message.artifactResults()).contains("artifact-1");
+                    assertThat(message.artifactResults()).contains("frame.hex");
+                    assertThat(message.orchestrationMode()).isEqualTo("STRUCTURED_PLUS_AGENTIC");
+                })
+                .verifyComplete();
+    }
 }

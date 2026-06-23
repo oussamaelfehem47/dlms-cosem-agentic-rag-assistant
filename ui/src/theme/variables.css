@@ -1,0 +1,413 @@
+:root {
+  --ion-color-primary: #5d7d94;
+  --ion-color-primary-rgb: 93, 125, 148;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-shade: #526d82;
+  --ion-color-primary-tint: #6f8da2;
+
+  --ion-color-secondary: #4f8685;
+  --ion-color-secondary-rgb: 79, 134, 133;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-shade: #467675;
+  --ion-color-secondary-tint: #619291;
+
+  --ion-color-tertiary: #8d7b67;
+  --ion-color-tertiary-rgb: 141, 123, 103;
+  --ion-color-tertiary-contrast: #ffffff;
+  --ion-color-tertiary-shade: #7b6b59;
+  --ion-color-tertiary-tint: #9b8a77;
+
+  --ion-color-success: #2f855a;
+  --ion-color-success-rgb: 47, 133, 90;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-shade: #2a754f;
+  --ion-color-success-tint: #479167;
+
+  --ion-color-warning: #b7791f;
+  --ion-color-warning-rgb: 183, 121, 31;
+  --ion-color-warning-contrast: #ffffff;
+  --ion-color-warning-shade: #a06a1b;
+  --ion-color-warning-tint: #c28737;
+
+  --ion-color-danger: #c05656;
+  --ion-color-danger-rgb: 192, 86, 86;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-shade: #a94c4c;
+  --ion-color-danger-tint: #c96a6a;
+
+  --ion-color-dark: #25313a;
+  --ion-color-dark-rgb: 37, 49, 58;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-shade: #202a32;
+  --ion-color-dark-tint: #394650;
+
+  --ion-color-medium: #6d716d;
+  --ion-color-medium-rgb: 109, 113, 109;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-shade: #5f635f;
+  --ion-color-medium-tint: #7b7f7b;
+
+  --ion-color-light: #f4efe7;
+  --ion-color-light-rgb: 244, 239, 231;
+  --ion-color-light-contrast: #25313a;
+  --ion-color-light-shade: #e3ddd4;
+  --ion-color-light-tint: #faf7f2;
+
+  --ion-background-color: #f4efe7;
+  --ion-background-color-rgb: 244, 239, 231;
+  --ion-text-color: #1f2a33;
+  --ion-text-color-rgb: 31, 42, 51;
+
+  --ion-color-step-50: #fbf8f3;
+  --ion-color-step-100: #f4efe7;
+  --ion-color-step-150: #ece5db;
+  --ion-color-step-200: #e3d9cc;
+  --ion-color-step-300: #cdbfae;
+  --ion-color-step-400: #a89a8c;
+
+  --ion-card-background: #fffdf9;
+  --ion-item-background: #fffdf9;
+  --ion-toolbar-background: #f4efe7;
+
+  --chat-bg: #f4efe7;
+  --chat-surface: #fffdf9;
+  --chat-surface-2: #efe7dc;
+  --chat-border: #e3d9cc;
+  --chat-border-2: #d3c6b8;
+  --chat-text: #1f2a33;
+  --chat-muted: #6d716d;
+  --chat-muted-2: #8d908c;
+  --chat-user-bubble: #4d7a96;
+  --chat-user-text: #ffffff;
+  --chat-primary: #5d7d94;
+  --chat-primary-soft: rgba(93, 125, 148, 0.10);
+  --chat-assistant-bg: #fffdf9;
+  --chat-input-bg: #fffdf9;
+  --chat-input-border: #d3c6b8;
+  --chat-shadow: 0 1px 2px rgba(35, 40, 44, 0.03), 0 6px 18px rgba(35, 40, 44, 0.035);
+  --chat-shadow-lg: 0 14px 30px rgba(35, 40, 44, 0.06);
+  --chat-code-bg: #f6f0e7;
+  --chat-code-border: #e3d9cc;
+  --chat-tool-bg: #f6f0e7;
+  --chat-tool-border: #e3d9cc;
+  --chat-hover: #f6f0e7;
+  --chat-active: #e8efe9;
+  --chat-gradient-start: #748f9f;
+  --chat-gradient-end: #869ca5;
+  --chat-shell-overlay: rgba(244, 239, 231, 0.92);
+
+  --input-max-width: 860px;
+  --input-padding-x: 16px;
+  --input-padding-y: 8px;
+  --input-bottom-pad: 12px;
+  --input-border-radius: 18px;
+  --input-gap: 8px;
+  --scroll-btn-bottom: 196px;
+}
+
+body.dark-theme {
+  --ion-color-primary: #91afc2;
+  --ion-color-primary-rgb: 145, 175, 194;
+  --ion-color-primary-contrast: #000000;
+  --ion-color-primary-shade: #7f9aac;
+  --ion-color-primary-tint: #9dbbcb;
+
+  --ion-color-secondary: #78aead;
+  --ion-color-secondary-rgb: 120, 174, 173;
+  --ion-color-secondary-contrast: #000000;
+  --ion-color-secondary-shade: #6a9a99;
+  --ion-color-secondary-tint: #88b8b7;
+
+  --ion-color-tertiary: #b59f8a;
+  --ion-color-tertiary-rgb: 181, 159, 138;
+  --ion-color-tertiary-contrast: #000000;
+  --ion-color-tertiary-shade: #9d8a78;
+  --ion-color-tertiary-tint: #c0ab98;
+
+  --ion-color-success: #68b18c;
+  --ion-color-success-rgb: 104, 177, 140;
+  --ion-color-success-contrast: #000000;
+  --ion-color-success-shade: #5c9c7b;
+  --ion-color-success-tint: #79ba99;
+
+  --ion-color-warning: #d0a25d;
+  --ion-color-warning-rgb: 208, 162, 93;
+  --ion-color-warning-contrast: #000000;
+  --ion-color-warning-shade: #b58e52;
+  --ion-color-warning-tint: #d7ae72;
+
+  --ion-color-danger: #de8d8d;
+  --ion-color-danger-rgb: 222, 141, 141;
+  --ion-color-danger-contrast: #000000;
+  --ion-color-danger-shade: #c47c7c;
+  --ion-color-danger-tint: #e39a9a;
+
+  --ion-color-dark: #f4efe7;
+  --ion-color-dark-rgb: 244, 239, 231;
+  --ion-color-dark-contrast: #000000;
+  --ion-color-dark-shade: #e3ddd4;
+  --ion-color-dark-tint: #faf7f2;
+
+  --ion-color-medium: #b3aba0;
+  --ion-color-medium-rgb: 179, 171, 160;
+  --ion-color-medium-contrast: #000000;
+  --ion-color-medium-shade: #9d968d;
+  --ion-color-medium-tint: #bcb4aa;
+
+  --ion-color-light: #2c3943;
+  --ion-color-light-rgb: 44, 57, 67;
+  --ion-color-light-contrast: #ffffff;
+  --ion-color-light-shade: #26323a;
+  --ion-color-light-tint: #3b4750;
+
+  --ion-background-color: #171d22;
+  --ion-background-color-rgb: 23, 29, 34;
+  --ion-text-color: #e8e1d7;
+  --ion-text-color-rgb: 232, 225, 215;
+
+  --ion-color-step-50: #1b2228;
+  --ion-color-step-100: #222a31;
+  --ion-color-step-150: #283139;
+  --ion-color-step-200: #38434b;
+  --ion-color-step-300: #4b565d;
+  --ion-color-step-400: #706a63;
+
+  --ion-card-background: #222a31;
+  --ion-item-background: #222a31;
+  --ion-toolbar-background: #171d22;
+
+  --chat-bg: #171d22;
+  --chat-surface: #222a31;
+  --chat-surface-2: #283139;
+  --chat-border: #38434b;
+  --chat-border-2: #4b565d;
+  --chat-text: #e8e1d7;
+  --chat-muted: #b3aba0;
+  --chat-muted-2: #8f8a81;
+  --chat-user-bubble: #8fb1c4;
+  --chat-user-text: #000000;
+  --chat-primary: #91afc2;
+  --chat-primary-soft: rgba(145, 175, 194, 0.11);
+  --chat-assistant-bg: #222a31;
+  --chat-input-bg: #222a31;
+  --chat-input-border: #4b565d;
+  --chat-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.12);
+  --chat-shadow-lg: 0 14px 32px rgba(0, 0, 0, 0.18);
+  --chat-code-bg: #1f262c;
+  --chat-code-border: #38434b;
+  --chat-tool-bg: #1f262c;
+  --chat-tool-border: #38434b;
+  --chat-hover: #283139;
+  --chat-active: rgba(143, 177, 196, 0.14);
+  --chat-gradient-start: #7f96a3;
+  --chat-gradient-end: #8ea0a7;
+  --chat-shell-overlay: rgba(23, 29, 34, 0.90);
+}
+
+ion-content {
+  --background: var(--chat-bg);
+}
+
+ion-toolbar {
+  --background: var(--chat-bg);
+  --border-width: 0;
+  --border-color: var(--chat-border);
+  --color: var(--chat-text);
+  box-shadow: none;
+}
+
+ion-card {
+  --background: var(--chat-bg);
+  --box-shadow: var(--chat-shadow);
+  border: 1px solid var(--chat-border);
+  border-radius: 12px;
+}
+
+ion-item {
+  --background: var(--chat-bg);
+  --border-color: var(--chat-border);
+  --color: var(--chat-text);
+}
+
+ion-accordion-group {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--chat-border);
+}
+
+ion-chip {
+  --background: var(--chat-surface);
+  --color: var(--chat-muted);
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(143, 177, 196, 0.08), rgba(143, 177, 196, 0) 28%),
+    var(--chat-bg);
+}
+
+textarea::placeholder {
+  color: var(--chat-muted-2);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--chat-border-2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--chat-muted-2);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--chat-gradient-start), var(--chat-gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.chat-input-wrapper:focus-within {
+  border-color: var(--ion-color-primary) !important;
+  box-shadow: 0 0 0 3px var(--chat-primary-soft);
+}
+
+.shimmer-loading {
+  background: linear-gradient(90deg, var(--chat-surface) 25%, var(--chat-surface-2) 50%, var(--chat-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+.assistant-markdown {
+  line-height: 1.6;
+}
+
+.assistant-markdown p {
+  margin: 0 0 8px 0;
+}
+
+.assistant-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.assistant-markdown ul,
+.assistant-markdown ol {
+  margin: 4px 0 8px 16px;
+  padding: 0;
+}
+
+.assistant-markdown li {
+  margin-bottom: 4px;
+}
+
+.assistant-markdown strong {
+  color: var(--ion-color-primary, #00C5C0);
+  font-weight: 600;
+}
+
+.assistant-markdown code,
+.assistant-markdown .inline-code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.assistant-markdown h1,
+.assistant-markdown h2,
+.assistant-markdown h3 {
+  margin: 8px 0 4px 0;
+  font-size: 1em;
+  font-weight: 600;
+  color: var(--ion-color-primary, #00C5C0);
+}
+
+.assistant-markdown a {
+  color: var(--ion-color-primary, #00C5C0);
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --input-padding-x: 12px;
+    --input-padding-y: 6px;
+    --input-bottom-pad: 10px;
+    --input-border-radius: 16px;
+    --input-gap: 6px;
+    --scroll-btn-bottom: 182px;
+  }
+
+  ion-toolbar {
+    --padding-start: 4px;
+    --padding-end: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --input-padding-x: 8px;
+    --input-padding-y: 5px;
+    --input-bottom-pad: 8px;
+    --input-border-radius: 14px;
+    --input-gap: 4px;
+    --scroll-btn-bottom: 176px;
+  }
+
+  body {
+    background: var(--chat-bg);
+  }
+}

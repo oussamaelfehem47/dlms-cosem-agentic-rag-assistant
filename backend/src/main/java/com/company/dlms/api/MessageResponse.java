@@ -12,6 +12,7 @@ public record MessageResponse(
     String intent,
     @JsonProperty("raw_input") String rawInput,
     @JsonProperty("decode_result") @JsonRawValue String decodeResult,
+    @JsonProperty("artifact_results") @JsonRawValue String artifactResults,
     @JsonProperty("strategy_metadata") @JsonRawValue String strategyMetadata,
     @JsonProperty("orchestration_mode") String orchestrationMode,
     @JsonProperty("planner_used") Boolean plannerUsed,
@@ -23,4 +24,45 @@ public record MessageResponse(
     @JsonProperty("explanation_mode") String explanationMode,
     @JsonProperty("tool_provenance") String toolProvenance,
     @JsonProperty("created_at") Instant createdAt
-) {}
+) {
+    public MessageResponse(
+            UUID id,
+            String role,
+            String inputClass,
+            String intent,
+            String rawInput,
+            String decodeResult,
+            String strategyMetadata,
+            String orchestrationMode,
+            Boolean plannerUsed,
+            String toolTrace,
+            String plannerFallbackReason,
+            String explanation,
+            String sessionId,
+            boolean usedMcpFallback,
+            String explanationMode,
+            String toolProvenance,
+            Instant createdAt
+    ) {
+        this(
+                id,
+                role,
+                inputClass,
+                intent,
+                rawInput,
+                decodeResult,
+                null,
+                strategyMetadata,
+                orchestrationMode,
+                plannerUsed,
+                toolTrace,
+                plannerFallbackReason,
+                explanation,
+                sessionId,
+                usedMcpFallback,
+                explanationMode,
+                toolProvenance,
+                createdAt
+        );
+    }
+}

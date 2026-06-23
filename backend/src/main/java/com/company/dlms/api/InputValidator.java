@@ -16,7 +16,7 @@ import org.xml.sax.InputSource;
 
 @Component
 public class InputValidator {
-
+    private static final int MAX_ARTIFACTS = 8;
     private static final Pattern HEX_FRAME = Pattern.compile("^[0-9A-Fa-f\\s]+$");
     private static final Pattern HEX_PAYLOAD = Pattern.compile("^[0-9A-Fa-f]+$");
     private static final Pattern ALARM = Pattern.compile("^0x[0-9A-Fa-f]+$");
@@ -29,6 +29,7 @@ public class InputValidator {
             if (request == null || request.rawInput() == null || request.inputClass() == null) {
                 throw new ValidationException("Request, rawInput, and inputClass are required");
             }
+            validateArtifacts(request);
             DlmsInputNormalization dlmsNormalization = request.dlmsNormalization();
             if (dlmsNormalization != null) {
                 validateDlmsNormalization(dlmsNormalization);
@@ -46,6 +47,20 @@ public class InputValidator {
             }
             return request;
         });
+    }
+
+    private void validateArtifacts(WorkflowRequest request) {
+        if (request.artifacts() == null || request.artifacts().isEmpty()) {
+            return;
+        }
+        if (request.artifacts().size() > MAX_ARTIFACTS) {
+            throw new ValidationException("At most 8 artifacts are allowed per turn");
+        }
+        boolean allBlank = request.artifacts().stream()
+                .allMatch(artifact -> artifact == null || artifact.text() == null || artifact.text().isBlank());
+        if (allBlank) {
+            throw new ValidationException("Artifact payloads are empty");
+        }
     }
 
     private void validateDlmsNormalization(DlmsInputNormalization normalization) {

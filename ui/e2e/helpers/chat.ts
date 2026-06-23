@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-const RESPONSE_TIMEOUT = 90_000; // 90 s — lfm2.5-thinking can be slow
+const RESPONSE_TIMEOUT = 90_000; // 90 s - local inference can still be slow
 
 /**
  * Type text into the composer and click Send (or press Enter).

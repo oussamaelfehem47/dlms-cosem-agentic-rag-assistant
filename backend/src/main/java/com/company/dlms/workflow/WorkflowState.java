@@ -43,6 +43,7 @@ public record WorkflowState(
         ProfileResult profileResult,
         SiconiaResult siconiaResult,
         List<SessionEvent> narrativeContext,
+        List<ArtifactResultPayload> recentArtifactResults,
         List<String> anomalies,
         StmSnapshot stmSnapshot,
         String securityContextSummary,
@@ -61,37 +62,15 @@ public record WorkflowState(
         Objects.requireNonNull(sessionId, "sessionId is required");
         Objects.requireNonNull(conversationId, "conversationId is required");
         Objects.requireNonNull(rawInput, "rawInput is required");
-        return new WorkflowState(
-                sessionId,
-                conversationId,
-                rawInput,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null, null, null, null, null, null, null, null, null, null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                false,
-                false,
-                false,
-                List.of(),
-                null,
-                List.of(),
-                0L
-        );
+        return new Builder()
+                .sessionId(sessionId)
+                .conversationId(conversationId)
+                .rawInput(rawInput)
+                .recentArtifactResults(List.of())
+                .toolTrace(List.of())
+                .errors(List.of())
+                .startTimeMs(0L)
+                .build();
     }
 
     public Builder toBuilder() {
@@ -148,6 +127,10 @@ public record WorkflowState(
 
     public WorkflowState withStmSnapshot(StmSnapshot stmSnapshot) {
         return toBuilder().stmSnapshot(stmSnapshot).build();
+    }
+
+    public WorkflowState withRecentArtifactResults(List<ArtifactResultPayload> recentArtifactResults) {
+        return toBuilder().recentArtifactResults(recentArtifactResults).build();
     }
 
     public WorkflowState withPlannerUsed(boolean plannerUsed) {
@@ -207,6 +190,7 @@ public record WorkflowState(
         private boolean siconiaResultExplicitlySet;
         private List<SessionEvent> narrativeContext;
         private boolean narrativeContextExplicitlySet;
+        private List<ArtifactResultPayload> recentArtifactResults;
         private List<String> anomalies;
         private boolean anomaliesExplicitlySet;
         private StmSnapshot stmSnapshot;
@@ -251,6 +235,7 @@ public record WorkflowState(
             this.profileResult = state.profileResult;
             this.siconiaResult = state.siconiaResult;
             this.narrativeContext = state.narrativeContext;
+            this.recentArtifactResults = state.recentArtifactResults;
             this.anomalies = state.anomalies;
             this.stmSnapshot = state.stmSnapshot;
             this.securityContextSummary = state.securityContextSummary;
@@ -307,6 +292,7 @@ public record WorkflowState(
             this.narrativeContextExplicitlySet = true;
             return this;
         }
+        public Builder recentArtifactResults(List<ArtifactResultPayload> v) { this.recentArtifactResults = v; return this; }
         public Builder anomalies(List<String> v) {
             this.anomalies = v;
             this.anomaliesExplicitlySet = true;
@@ -336,6 +322,7 @@ public record WorkflowState(
             syncCanonicalFieldsFromGroundedAnswerContext();
             List<String> safeErrors = errors == null ? List.of() : List.copyOf(errors);
             List<SessionEvent> safeNarrative = narrativeContext == null ? null : List.copyOf(narrativeContext);
+            List<ArtifactResultPayload> safeRecentArtifactResults = recentArtifactResults == null ? List.of() : List.copyOf(recentArtifactResults);
             List<RetrievalResult> safeRetrieval = retrievalResults == null ? null : List.copyOf(retrievalResults);
             List<String> safeAnomalies = anomalies == null ? null : List.copyOf(anomalies);
             List<ToolTraceEntry> safeToolTrace = toolTrace == null ? List.of() : List.copyOf(toolTrace);
@@ -365,6 +352,7 @@ public record WorkflowState(
                     profileResult,
                     siconiaResult,
                     safeNarrative,
+                    safeRecentArtifactResults,
                     safeAnomalies,
                     stmSnapshot,
                     securityContextSummary,

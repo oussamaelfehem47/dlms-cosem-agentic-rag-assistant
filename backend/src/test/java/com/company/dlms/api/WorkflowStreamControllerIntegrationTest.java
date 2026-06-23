@@ -29,7 +29,10 @@ import com.company.dlms.workflow.InputUnderstandingService;
 import com.company.dlms.workflow.FollowUpResolver;
 import com.company.dlms.workflow.GroundedAnswerBuilder;
 import com.company.dlms.workflow.HybridAgenticPlannerService;
+import com.company.dlms.workflow.MultiArtifactTurnOrchestrator;
 import com.company.dlms.workflow.StreamingWorkflowService;
+import com.company.dlms.workflow.TurnArtifactExtractionService;
+import com.company.dlms.workflow.TurnSynthesisPlannerService;
 import com.company.dlms.workflow.WorkflowOrchestrator;
 import com.company.dlms.workflow.WorkflowRequest;
 import com.company.dlms.workflow.WorkflowState;
@@ -79,7 +82,10 @@ import static org.mockito.Mockito.when;
     RouterAgent.class,
     InputUnderstandingService.class,
     FollowUpResolver.class,
-    GroundedAnswerBuilder.class
+    GroundedAnswerBuilder.class,
+    TurnArtifactExtractionService.class,
+    TurnSynthesisPlannerService.class,
+    MultiArtifactTurnOrchestrator.class
 })
 class WorkflowStreamControllerIntegrationTest {
 

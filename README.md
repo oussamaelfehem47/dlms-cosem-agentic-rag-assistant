@@ -1,14 +1,14 @@
 # DLMS/COSEM Hybrid Agentic RAG Assistant
 
 An offline assistant for **DLMS/COSEM protocol analysis** and **SICONIA HES/DCU troubleshooting**.  
-It combines deterministic Java decoding, hybrid retrieval, session memory, anomaly detection, and bounded LLM planning so engineers can investigate frames, payloads, alarms, traces, and support knowledge inside controlled environments.
+It combines deterministic Java decoding, hybrid retrieval, session memory, anomaly detection, and bounded LLM planning so engineers can investigate frames, payloads, alarms, traces, uploads, and support knowledge inside controlled environments.
 
 ## Why this project exists
 
-Field troubleshooting for smart metering systems usually involves two problems at once:
+Field troubleshooting for smart metering systems usually involves two hard problems at once:
 
 - protocol data must be decoded correctly
-- operational knowledge is scattered across logs, traces, standards, and internal support material
+- operational knowledge is scattered across logs, traces, standards, and support material
 
 This project brings both into one local system:
 
@@ -18,26 +18,24 @@ This project brings both into one local system:
 
 ## What makes it hybrid agentic RAG
 
-This assistant is not a generic chatbot and not just a parser.
-
-- **Deterministic truth layer**
+- **Deterministic truth layer**  
   HDLC, APDU, AXDR, OBIS, XML, log, and alarm interpretation are handled by code and remain authoritative.
-- **Agentic reasoning layer**
-  the planner can decide when to use retrieval, session memory, or deterministic tools for natural-language and mixed prompts.
-- **Grounded answer layer**
+- **Agentic reasoning layer**  
+  the planner decides when to use retrieval, session memory, or deterministic tools for natural-language and mixed prompts.
+- **Grounded answer layer**  
   final answers are constrained by deterministic results and retrieved evidence instead of free-form guessing.
 
 ## Current validated snapshot
 
-- **Deployment:** 5 containers
+- **Deployment:** 5 containers  
   `dlms-ui`, `dlms-nginx`, `dlms-backend`, `dlms-postgres`, `dlms-mcp-server`
-- **Model runtime:** Ollama on host, not inside Docker
+- **Model runtime:** Ollama on the host, not inside Docker
 - **Default local model:** `qwen2.5:3b`
 - **Knowledge Graph:** 51 nodes, 28 edges
 - **Retrieval corpus:** 8,659 DLMS chunks + 2,516 Confluence chunks
 - **Hybrid retrieval weighting:** `0.7 x vector + 0.3 x BM25`
 - **Anomaly detection:** 8 runtime rules
-- **Automated tests:** 644 backend + 87 frontend unit tests
+- **Automated verification:** 655 backend tests + 103 frontend tests
 
 ## Architecture overview
 
@@ -70,6 +68,7 @@ flowchart LR
 - AXDR primitive and structure decoding
 - OBIS resolution
 - GBT-aware decoding support
+- multi-artifact turn decomposition and per-artifact rendering
 
 ### SICONIA troubleshooting
 
@@ -90,7 +89,7 @@ flowchart LR
 - JWT authentication and RBAC
 - admin panel for users, feedback, health, and reflection stats
 - conversation persistence, search, and export
-- upload support for analysis workflows
+- click upload and drag-and-drop upload support
 
 ## Example prompts
 
@@ -116,6 +115,16 @@ C4020109060100010800FF
 
 ```text
 Decode APDU C4020109060100010800FF and explain what object was returned.
+```
+
+### Multi-artifact turn
+
+```text
+7EA00A030383CD6F7E
+
+03 01
+
+C4020109060100010800FF
 ```
 
 ### Natural-language grounded questions
@@ -158,7 +167,7 @@ Analyze and explain this SICONIA alarm in context, and suggest remediation: 0x13
 
 ### Prerequisites
 
-- Docker Desktop
+- Docker Desktop or a compatible Compose runtime
 - Java 25
 - Maven 3.9+
 - Node 20+ for local UI development
@@ -200,6 +209,17 @@ docker ps
 curl http://localhost:3000/api/actuator/health
 curl http://localhost:3000/api/mcp/health
 ```
+
+### Podman / corporate note
+
+If your container runtime cannot resolve `host.docker.internal`, set the host alias before startup:
+
+```powershell
+$env:OLLAMA_HOST="host.containers.internal"
+docker-compose up --build -d
+```
+
+The compose file uses that override for both the backend and MCP container path to Ollama.
 
 ### Main endpoints
 

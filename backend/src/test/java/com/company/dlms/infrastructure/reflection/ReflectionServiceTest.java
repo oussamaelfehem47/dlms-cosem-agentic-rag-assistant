@@ -39,7 +39,7 @@ class ReflectionServiceTest {
 
     @BeforeEach
     void setUp() {
-        reflectionService = new ReflectionService(repository, feedbackRepository, adaptivePromptService, "lfm2.5-thinking");
+        reflectionService = new ReflectionService(repository, feedbackRepository, adaptivePromptService, "qwen2.5:3b");
         when(adaptivePromptService.getAdaptations()).thenReturn(Map.of());
     }
 
@@ -165,7 +165,7 @@ class ReflectionServiceTest {
                 new com.company.dlms.domain.reflection.MessageFeedback(
                         UUID.randomUUID(), null, null, UUID.randomUUID(),
                         "FRAME_DECODE", "HEX_FRAME", "dislike",
-                        null, null, "lfm2.5-thinking", Instant.now())
+                        null, null, "qwen2.5:3b", Instant.now())
         ));
 
         FeedbackRequest req = new FeedbackRequest(

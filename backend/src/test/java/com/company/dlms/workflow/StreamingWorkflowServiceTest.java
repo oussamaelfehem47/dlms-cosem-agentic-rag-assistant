@@ -76,7 +76,7 @@ class StreamingWorkflowServiceTest {
                 new FollowUpResolver(),
                 promptAssembler,
                 new com.company.dlms.infrastructure.llm.GroundedFactBundleBuilder(),
-                new com.company.dlms.infrastructure.llm.GroundedAnswerQualityGate("lfm2.5-thinking"),
+                new com.company.dlms.infrastructure.llm.GroundedAnswerQualityGate("qwen2.5:3b"),
                 ollamaStreamingClient,
                 new ThinkTagFilter(),
                 new MathMarkupFilter(),

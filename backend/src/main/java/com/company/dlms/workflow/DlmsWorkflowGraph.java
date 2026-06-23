@@ -31,6 +31,7 @@ public class DlmsWorkflowGraph {
             RouterAgent routerAgent,
             StmService stmService,
             SessionNarrativeService sessionNarrativeService,
+            ArtifactBatchContextService artifactBatchContextService,
             AgentDispatchNode agentDispatchNode,
             com.company.dlms.agent.AnomalyDetectionNode anomalyDetectionNode,
             ReportingAgentNode reportingAgentNode,
@@ -65,6 +66,12 @@ public class DlmsWorkflowGraph {
         graph.addNode("load_narrative", AsyncNodeAction.node_async((NodeAction<AgentState>) state -> {
             WorkflowState wf = requireWorkflowState(state);
             WorkflowState next = sessionNarrativeService.loadNarrativeSync(wf);
+            return Map.of(WORKFLOW_STATE_KEY, next);
+        }));
+
+        graph.addNode("load_artifact_context", AsyncNodeAction.node_async((NodeAction<AgentState>) state -> {
+            WorkflowState wf = requireWorkflowState(state);
+            WorkflowState next = artifactBatchContextService.loadRecentArtifactResultsSync(wf);
             return Map.of(WORKFLOW_STATE_KEY, next);
         }));
 
@@ -104,7 +111,8 @@ public class DlmsWorkflowGraph {
         graph.addEdge(START, "router");
         graph.addEdge("router", "load_stm");
         graph.addEdge("load_stm", "load_narrative");
-        graph.addEdge("load_narrative", "dispatch");
+        graph.addEdge("load_narrative", "load_artifact_context");
+        graph.addEdge("load_artifact_context", "dispatch");
         graph.addEdge("dispatch", "retrieval");
         graph.addEdge("retrieval", "anomaly_detection");
         graph.addEdge("anomaly_detection", "reporting");

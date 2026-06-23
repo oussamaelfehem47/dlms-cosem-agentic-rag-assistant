@@ -298,6 +298,10 @@ public class AgentDispatchNode {
 
     private String summarizeSessionMemory(WorkflowState state) {
         List<String> parts = new ArrayList<>();
+        if (state.recentArtifactResults() != null && !state.recentArtifactResults().isEmpty()) {
+            parts.add("last multi-artifact batch with " + state.recentArtifactResults().size() + " artifact result"
+                    + (state.recentArtifactResults().size() == 1 ? "" : "s"));
+        }
         if (state.associationState() != null && !state.associationState().isBlank()) {
             parts.add("association state " + state.associationState());
         }

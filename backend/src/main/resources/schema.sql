@@ -134,6 +134,7 @@ CREATE TABLE IF NOT EXISTS messages (
     intent              TEXT,
     raw_input           TEXT,
     decode_result_json  JSONB,
+    artifact_results_json JSONB,
     strategy_metadata_json JSONB,
     orchestration_mode  TEXT,
     planner_used        BOOLEAN,
@@ -148,6 +149,7 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS intent TEXT;
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS artifact_results_json JSONB;
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS strategy_metadata_json JSONB;
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS orchestration_mode TEXT;
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS planner_used BOOLEAN;

@@ -84,7 +84,7 @@ public class GroundedAnswerQualityGate {
     private final boolean preferGroundedFamilyFallback;
 
     public GroundedAnswerQualityGate(
-            @Value("${spring.ai.ollama.chat.model:lfm2.5-thinking}") String modelName
+            @Value("${spring.ai.ollama.chat.model:qwen2.5:3b}") String modelName
     ) {
         String normalizedModel = modelName == null ? "" : modelName.toLowerCase(Locale.ROOT);
         this.preferGroundedFamilyFallback = normalizedModel.contains("lfm")

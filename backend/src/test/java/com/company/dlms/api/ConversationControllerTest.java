@@ -101,7 +101,7 @@ class ConversationControllerTest {
                 "test input", null, null, "NATURAL_LANGUAGE_AGENTIC", Boolean.TRUE, toolTraceJson,
                 "No strong structured candidate found", "answer", null, false, null, null);
         when(conversationService.saveMessage(eq(CONV_ID), eq(USER_ID), anyString(), anyString(),
-                anyString(), anyString(), isNull(), isNull(),
+                anyString(), anyString(), isNull(), isNull(), isNull(),
                 eq("NATURAL_LANGUAGE_AGENTIC"), eq(Boolean.TRUE), eq(toolTraceJson),
                 eq("No strong structured candidate found"), anyString(), isNull(),
                 eq(false), isNull(), isNull()))

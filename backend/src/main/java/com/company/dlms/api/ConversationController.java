@@ -58,6 +58,7 @@ public class ConversationController {
                         req.rawInput(),
                         req.decodeResultJson(),
                         req.strategyMetadataJson(),
+                        req.artifactResultsJson(),
                         req.orchestrationMode(),
                         req.plannerUsed(),
                         req.toolTraceJson(),
@@ -69,11 +70,12 @@ public class ConversationController {
                         req.toolProvenance()
                 ))
                 .map(msg -> ResponseEntity.status(201).body(new MessageResponse(
-                        msg.messageId(), msg.role(), msg.inputClass(), msg.intent(), msg.rawInput(),
-                        msg.decodeResultJson() == null ? null : msg.decodeResultJson().asString(),
-                        msg.strategyMetadataJson() == null ? null : msg.strategyMetadataJson().asString(),
-                        msg.orchestrationMode(),
-                        msg.plannerUsed(),
+                msg.messageId(), msg.role(), msg.inputClass(), msg.intent(), msg.rawInput(),
+                msg.decodeResultJson() == null ? null : msg.decodeResultJson().asString(),
+                msg.artifactResultsJson() == null ? null : msg.artifactResultsJson().asString(),
+                msg.strategyMetadataJson() == null ? null : msg.strategyMetadataJson().asString(),
+                msg.orchestrationMode(),
+                msg.plannerUsed(),
                         msg.toolTraceJson() == null ? null : msg.toolTraceJson().asString(),
                         msg.plannerFallbackReason(),
                         msg.explanation(),
@@ -113,6 +115,7 @@ public class ConversationController {
             String rawInput,
             String decodeResultJson,
             String strategyMetadataJson,
+            String artifactResultsJson,
             String orchestrationMode,
             Boolean plannerUsed,
             String toolTraceJson,

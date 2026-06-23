@@ -43,7 +43,7 @@ public class ReflectionService {
             ReflectionStatsRepository repository,
             MessageFeedbackRepository feedbackRepository,
             AdaptivePromptService adaptivePromptService,
-            @Value("${spring.ai.ollama.chat.model:lfm2.5-thinking}") String modelName) {
+            @Value("${spring.ai.ollama.chat.model:qwen2.5:3b}") String modelName) {
         this.repository = repository;
         this.feedbackRepository = feedbackRepository;
         this.adaptivePromptService = adaptivePromptService;

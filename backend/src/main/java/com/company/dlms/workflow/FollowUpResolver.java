@@ -11,7 +11,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
@@ -35,6 +37,7 @@ public class FollowUpResolver {
                     + "\\blast\\s+obis\\b|\\bwhat\\s+obis\\b",
             Pattern.CASE_INSENSITIVE
     );
+    private static final Pattern ARTIFACT_REFERENCE_PATTERN = Pattern.compile("\\bartifact\\s+(\\d+)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern FRAME_PATTERN = Pattern.compile("(?i)7E(?:[0-9A-F]{2}|[\\s:]){5,}7E");
     private static final Pattern OBIS_PATTERN = Pattern.compile("\\b\\d{1,3}(?:\\.\\d{1,3}){5}\\b");
     private static final Pattern DIRECT_ALARM_PATTERN = Pattern.compile("(?i)^\\s*0x[0-9a-f]{2,8}\\s*$");
@@ -69,6 +72,10 @@ public class FollowUpResolver {
             return Optional.empty();
         }
 
+        Matcher artifactReference = ARTIFACT_REFERENCE_PATTERN.matcher(normalizedInput);
+        if (artifactReference.find()) {
+            return Optional.of(resolveArtifactReference(state, artifactReference));
+        }
         if (CasualQueryClassifier.isPreviousFrameRecallQuestion(normalizedInput)) {
             return Optional.of(resolvePreviousFrameType(state));
         }
@@ -93,6 +100,7 @@ public class FollowUpResolver {
 
     private boolean isFollowUpQuestionNormalized(String normalizedInput) {
         return CasualQueryClassifier.isPreviousFrameRecallQuestion(normalizedInput)
+                || ARTIFACT_REFERENCE_PATTERN.matcher(normalizedInput).find()
                 || CONNECTION_ROLE_PATTERN.matcher(normalizedInput).find()
                 || LAST_ENTITY_RECALL_PATTERN.matcher(normalizedInput).find()
                 || MEANING_PATTERN.matcher(normalizedInput).find()
@@ -320,6 +328,57 @@ public class FollowUpResolver {
         );
     }
 
+    private FollowUpResolution resolveArtifactReference(WorkflowState state, Matcher artifactReference) {
+        int artifactIndex;
+        try {
+            artifactIndex = Integer.parseInt(artifactReference.group(1));
+        } catch (NumberFormatException ex) {
+            return new FollowUpResolution(
+                    FollowUpKind.ARTIFACT_RECALL,
+                    noContextAnswer("previous artifact result"),
+                    false
+            );
+        }
+
+        List<ArtifactResultPayload> artifactResults = state.recentArtifactResults();
+        if (artifactResults == null || artifactResults.isEmpty()) {
+            return new FollowUpResolution(
+                    FollowUpKind.ARTIFACT_RECALL,
+                    noContextAnswer("previous artifact result"),
+                    false
+            );
+        }
+        if (artifactIndex < 1 || artifactIndex > artifactResults.size()) {
+            return new FollowUpResolution(
+                    FollowUpKind.ARTIFACT_RECALL,
+                    "What happened: I only have " + artifactResults.size() + " artifact result"
+                            + (artifactResults.size() == 1 ? "" : "s")
+                            + " recorded for the last multi-artifact turn.\n"
+                            + "Can I trust it: Yes. That count comes from the stored batch result for this conversation.\n"
+                            + "Next step: Ask about an artifact number between 1 and " + artifactResults.size() + ".\n",
+                    true
+            );
+        }
+
+        ArtifactResultPayload artifact = artifactResults.get(artifactIndex - 1);
+        String label = artifactLabel(artifact);
+        String detail = artifact.explanation() == null ? "" : artifact.explanation().trim();
+
+        StringBuilder answer = new StringBuilder();
+        answer.append("What happened: Artifact ").append(artifactIndex).append(" in the last multi-artifact turn");
+        if (hasText(label)) {
+            answer.append(" decoded as ").append(label);
+        }
+        answer.append(".\n");
+        answer.append("Can I trust it: Yes. This comes from the stored structured result for that artifact.\n");
+        if (hasText(detail)) {
+            answer.append("Detail:\n").append(detail).append("\n");
+        } else {
+            answer.append("Next step: Reopen the structured artifact result if you want the full decode details for that artifact.\n");
+        }
+        return new FollowUpResolution(FollowUpKind.ARTIFACT_RECALL, answer.toString(), true);
+    }
+
     private Optional<String> currentFrameLabel(WorkflowState state) {
         if (!(state.decodeResult() instanceof DecodeResult decodeResult) || decodeResult.hdlcFrame() == null) {
             return Optional.empty();
@@ -382,6 +441,86 @@ public class FollowUpResolver {
         return value != null && (value.startsWith("U_FRAME") || value.startsWith("S_FRAME") || value.startsWith("I_FRAME"));
     }
 
+    private String artifactLabel(ArtifactResultPayload artifact) {
+        if (artifact == null) {
+            return null;
+        }
+        if (artifact.decodeResult() instanceof Map<?, ?> decodeMap) {
+            Map<?, ?> hdlcFrame = mapValue(decodeMap, "hdlcFrame");
+            if (hdlcFrame != null) {
+                String frameType = stringValue(hdlcFrame, "frameType");
+                String subtype = stringValue(hdlcFrame, "uFrameType");
+                if (!hasText(subtype)) {
+                    subtype = stringValue(hdlcFrame, "sFrameType");
+                }
+                return hasText(subtype) ? frameType + " (" + subtype + ")" : frameType;
+            }
+
+            String apduType = stringValue(decodeMap, "apduType");
+            if (hasText(apduType) && !"UNKNOWN".equalsIgnoreCase(apduType)) {
+                String obis = firstArtifactObis(decodeMap);
+                return hasText(obis) ? apduType + " for OBIS `" + obis + "`" : apduType;
+            }
+
+            Map<?, ?> axdrTree = mapValue(decodeMap, "axdrTree");
+            if (axdrTree != null) {
+                String type = stringValue(axdrTree, "type");
+                Object value = axdrTree.get("value");
+                if ("boolean".equalsIgnoreCase(type)) {
+                    return "AXDR boolean `" + value + "`";
+                }
+                if ("null".equalsIgnoreCase(type)) {
+                    return "AXDR `null-data`";
+                }
+                return "AXDR payload";
+            }
+        }
+
+        if (artifact.siconiaResult() instanceof Map<?, ?> siconiaMap) {
+            List<?> alarmResults = listValue(siconiaMap, "alarmResults");
+            if (!alarmResults.isEmpty()) {
+                return alarmResults.size() + " SICONIA alarm result" + (alarmResults.size() == 1 ? "" : "s");
+            }
+            Map<?, ?> logAnalysis = mapValue(siconiaMap, "logAnalysis");
+            if (logAnalysis != null) {
+                return stringValue(logAnalysis, "dominantLayer") + " log analysis";
+            }
+            Map<?, ?> xmlTrace = mapValue(siconiaMap, "xmlTrace");
+            if (xmlTrace != null) {
+                List<?> events = listValue(xmlTrace, "events");
+                return "XML trace with " + events.size() + " event" + (events.size() == 1 ? "" : "s");
+            }
+        }
+        return null;
+    }
+
+    private String firstArtifactObis(Map<?, ?> decodeMap) {
+        List<?> obisResolutions = listValue(decodeMap, "obisResolutions");
+        if (obisResolutions.isEmpty() || !(obisResolutions.getFirst() instanceof Map<?, ?> resolution)) {
+            return null;
+        }
+        return stringValue(resolution, "obis");
+    }
+
+    private Map<?, ?> mapValue(Map<?, ?> source, String key) {
+        Object value = source.get(key);
+        return value instanceof Map<?, ?> map ? map : null;
+    }
+
+    private List<?> listValue(Map<?, ?> source, String key) {
+        Object value = source.get(key);
+        return value instanceof List<?> list ? list : List.of();
+    }
+
+    private String stringValue(Map<?, ?> source, String key) {
+        Object value = source.get(key);
+        if (value == null) {
+            return null;
+        }
+        String text = String.valueOf(value);
+        return text.isBlank() ? null : text;
+    }
+
     private String meaningFromDecode(DecodeResult decodeResult) {
         if (decodeResult.hdlcFrame() != null) {
             String frameLabel = frameLabelFromDecode(decodeResult);
@@ -440,6 +579,10 @@ public class FollowUpResolver {
         if (state.lastObis() != null && !state.lastObis().isBlank()) {
             return state.lastObis();
         }
+        String artifactObis = latestArtifactResultObis(state);
+        if (hasText(artifactObis)) {
+            return artifactObis;
+        }
         return latestNarrativeEvent(state)
                 .map(SessionEvent::obis)
                 .filter(this::hasText)
@@ -453,7 +596,59 @@ public class FollowUpResolver {
                 && hasText(decodeResult.obisResolutions().getFirst().description())) {
             return decodeResult.obisResolutions().getFirst().description();
         }
+        String artifactDescription = latestArtifactResultObisDescription(state, obis);
+        if (hasText(artifactDescription)) {
+            return artifactDescription;
+        }
         return describeObisStructurally(obis);
+    }
+
+    private String latestArtifactResultObis(WorkflowState state) {
+        List<ArtifactResultPayload> artifactResults = state.recentArtifactResults();
+        if (artifactResults == null || artifactResults.isEmpty()) {
+            return null;
+        }
+        for (int i = artifactResults.size() - 1; i >= 0; i -= 1) {
+            ArtifactResultPayload artifact = artifactResults.get(i);
+            if (!(artifact.decodeResult() instanceof Map<?, ?> decodeMap)) {
+                continue;
+            }
+            String obis = firstArtifactObis(decodeMap);
+            if (hasText(obis)) {
+                return obis;
+            }
+        }
+        return null;
+    }
+
+    private String latestArtifactResultObisDescription(WorkflowState state, String obis) {
+        if (!hasText(obis)) {
+            return null;
+        }
+        List<ArtifactResultPayload> artifactResults = state.recentArtifactResults();
+        if (artifactResults == null || artifactResults.isEmpty()) {
+            return null;
+        }
+        for (int i = artifactResults.size() - 1; i >= 0; i -= 1) {
+            ArtifactResultPayload artifact = artifactResults.get(i);
+            if (!(artifact.decodeResult() instanceof Map<?, ?> decodeMap)) {
+                continue;
+            }
+            List<?> obisResolutions = listValue(decodeMap, "obisResolutions");
+            for (Object candidate : obisResolutions) {
+                if (!(candidate instanceof Map<?, ?> resolution)) {
+                    continue;
+                }
+                String candidateObis = stringValue(resolution, "obis");
+                if (obis.equals(candidateObis)) {
+                    String description = stringValue(resolution, "description");
+                    if (hasText(description)) {
+                        return description;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     private String describeObisStructurally(String obis) {
@@ -646,6 +841,7 @@ public class FollowUpResolver {
     }
 
     public enum FollowUpKind {
+        ARTIFACT_RECALL,
         PREVIOUS_FRAME_TYPE,
         CONNECTION_ROLE,
         LAST_ENTITY_RECALL,

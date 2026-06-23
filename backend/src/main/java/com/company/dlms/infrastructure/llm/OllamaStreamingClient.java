@@ -32,7 +32,7 @@ public class OllamaStreamingClient {
     public OllamaStreamingClient(
             @NonNull ObjectMapper objectMapper,
             @NonNull @Value("${spring.ai.ollama.base-url:http://localhost:11434}") String baseUrl,
-            @NonNull @Value("${spring.ai.ollama.chat.model:lfm2.5-thinking}") String model,
+            @NonNull @Value("${spring.ai.ollama.chat.model:qwen2.5:3b}") String model,
             @NonNull PromptAssembler promptAssembler
     ) {
         this(WebClient.builder().baseUrl(baseUrl).build(), objectMapper, model, promptAssembler);

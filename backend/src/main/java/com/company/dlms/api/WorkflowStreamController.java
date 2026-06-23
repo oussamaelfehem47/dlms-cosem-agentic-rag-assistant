@@ -83,6 +83,7 @@ public class WorkflowStreamController {
                 req.sessionId(),
                 req.conversationId(),
                 req.rawInput(),
+                req.artifacts(),
                 role,
                 req.inputClass(),
                 req.intentHint(),
@@ -107,6 +108,21 @@ public class WorkflowStreamController {
     }
 
     private WorkflowRequest normalizeUnifiedRequest(WorkflowRequest req) {
+        if (req.artifacts() != null && !req.artifacts().isEmpty()) {
+            return new WorkflowRequest(
+                    req.sessionId(),
+                    req.conversationId(),
+                    req.rawInput(),
+                    req.artifacts(),
+                    req.userRole(),
+                    req.inputClass() == null ? InputClass.QUERY : req.inputClass(),
+                    req.intentHint(),
+                    req.strategyMetadata(),
+                    req.siconiaNormalization(),
+                    req.dlmsNormalization(),
+                    req.orchestrationMode()
+            );
+        }
         InputUnderstanding understanding = inputUnderstandingService.understand(
                 req.rawInput(),
                 req.inputClass() == null ? InputClass.QUERY : req.inputClass()
@@ -115,6 +131,7 @@ public class WorkflowStreamController {
                 req.sessionId(),
                 req.conversationId(),
                 req.rawInput(),
+                req.artifacts(),
                 req.userRole(),
                 understanding.inputClass(),
                 understanding.intent(),

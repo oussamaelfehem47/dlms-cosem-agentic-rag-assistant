@@ -7,10 +7,13 @@ import com.company.dlms.domain.DlmsIntent;
 import com.company.dlms.domain.orchestration.StrategyMetadata;
 import com.company.dlms.domain.orchestration.OrchestrationMode;
 
+import java.util.List;
+
 public record WorkflowRequest(
         String sessionId,
         String conversationId,
         String rawInput,
+        List<TurnArtifact> artifacts,
         String userRole,
         InputClass inputClass,
         DlmsIntent intentHint,
@@ -19,12 +22,17 @@ public record WorkflowRequest(
         DlmsInputNormalization dlmsNormalization,
         OrchestrationMode orchestrationMode
 ){
+    public WorkflowRequest {
+        rawInput = rawInput == null ? "" : rawInput;
+        artifacts = artifacts == null ? List.of() : List.copyOf(artifacts);
+    }
+
     public WorkflowRequest(String sessionId, String conversationId, String rawInput, String userRole) {
-        this(sessionId, conversationId, rawInput, userRole, null, null, null, null, null, null);
+        this(sessionId, conversationId, rawInput, null, userRole, null, null, null, null, null, null);
     }
 
     public WorkflowRequest(String sessionId, String conversationId, String rawInput, String userRole, InputClass inputClass) {
-        this(sessionId, conversationId, rawInput, userRole, inputClass, null, null, null, null, null);
+        this(sessionId, conversationId, rawInput, null, userRole, inputClass, null, null, null, null, null);
     }
 
     public WorkflowRequest(
@@ -35,7 +43,18 @@ public record WorkflowRequest(
             InputClass inputClass,
             SiconiaInputNormalization siconiaNormalization
     ) {
-        this(sessionId, conversationId, rawInput, userRole, inputClass, null, null, siconiaNormalization, null, null);
+        this(sessionId, conversationId, rawInput, null, userRole, inputClass, null, null, siconiaNormalization, null, null);
+    }
+
+    public WorkflowRequest(
+            String sessionId,
+            String conversationId,
+            String rawInput,
+            List<TurnArtifact> artifacts,
+            String userRole,
+            InputClass inputClass
+    ) {
+        this(sessionId, conversationId, rawInput, artifacts, userRole, inputClass, null, null, null, null, null);
     }
 
     public String analysisInput() {

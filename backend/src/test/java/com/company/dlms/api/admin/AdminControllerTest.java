@@ -254,7 +254,7 @@ class AdminControllerTest {
                 .bind("feedback", "dislike")
                 .bind("promptSnapshot", "prompt")
                 .bind("responseSnapshot", "response")
-                .bind("modelName", "lfm2.5-thinking")
+                .bind("modelName", "qwen2.5:3b")
                 .then()
                 .block();
 

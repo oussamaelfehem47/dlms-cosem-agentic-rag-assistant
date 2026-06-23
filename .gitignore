@@ -1,11 +1,9 @@
 # Secrets
 .env
 backend/.env
-rag/**/.env
 
 # Java build output
 backend/target/
-backend/cp.txt
 *.class
 *.jar
 *.war
@@ -13,11 +11,6 @@ backend/cp.txt
 # Frontend build output
 ui/node_modules/
 ui/dist/
-ui/playwright-report/
-ui/test-results/
-ui/e2e/.auth/
-ui/cypress/screenshots/
-ui/cypress/videos/
 
 # Python
 **/__pycache__/
@@ -31,17 +24,9 @@ rag/ingestion/*.egg-info/
 .specify/
 .claude/
 
-# Local docs and private project assets
-docs/
-report/
-specs/
-confluence/
-knowledge_packs/
-tmp/
-scratch/
-
 # Large document files
 rag/documents/
+knowledge_packs/raw/
 *.pdf
 *.docx
 

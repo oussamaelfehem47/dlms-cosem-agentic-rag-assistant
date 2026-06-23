@@ -11,7 +11,7 @@ spring:
 
   ai:
     ollama:
-      # In Docker, we use host.docker.internal to reach Ollama on the Windows host
+      # Default Docker Desktop path. Override OLLAMA_HOST for Podman or other runtimes.
       base-url: http://${OLLAMA_HOST:host.docker.internal}:${OLLAMA_PORT:11434}
 
 # JSON logging for Docker (production-ready)

@@ -1,0 +1,48 @@
+.admin-shell {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 16px 28px;
+}
+
+.admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-self: start;
+  position: sticky;
+  top: 20px;
+}
+
+.admin-mobile-nav {
+  display: none;
+}
+
+.admin-main {
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .admin-shell {
+    display: block;
+    padding-top: 14px;
+  }
+
+  .admin-sidebar {
+    display: none;
+  }
+
+  .admin-mobile-nav {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+  }
+
+  .admin-mobile-nav::-webkit-scrollbar {
+    display: none;
+  }
+}

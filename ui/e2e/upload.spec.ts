@@ -99,3 +99,42 @@ test('5.3 Removing an attachment clears it from the queue', async ({ page }) => 
 
   fs.unlinkSync(tmpFile);
 });
+
+// 5.4 - Drag and drop upload on the composer drop target
+test('5.4 Dragging a file onto the composer queues it and still decodes on send', async ({ page }) => {
+  const tmpFile = path.join(os.tmpdir(), 'frame_drag_drop.txt');
+  fs.writeFileSync(tmpFile, '7EA00A030383CD6F7E');
+  const fileContent = fs.readFileSync(tmpFile, 'utf8');
+
+  const dataTransfer = await page.evaluateHandle(({ name, content }) => {
+    const dt = new DataTransfer();
+    dt.items.add(new File([content], name, { type: 'text/plain' }));
+    return dt;
+  }, {
+    name: path.basename(tmpFile),
+    content: fileContent,
+  });
+
+  const dropTarget = page.locator('[data-testid="composer-drop-target"]');
+
+  await dropTarget.dispatchEvent('dragenter', { dataTransfer });
+  await expect(dropTarget).toHaveAttribute('data-drag-active', 'true');
+  await dropTarget.dispatchEvent('dragover', { dataTransfer });
+  await dropTarget.dispatchEvent('drop', { dataTransfer });
+
+  await expect(dropTarget).toHaveAttribute('data-drag-active', 'false');
+  await expect(page.locator('[data-testid="attachment-queue"]')).toBeVisible({ timeout: 8_000 });
+  await expect(page.locator('[data-testid="attachment-queue"]').locator('text=frame_drag_drop.txt')).toBeVisible();
+
+  await page.locator('[data-testid="send-button"]').click();
+  await waitForResponse(page);
+
+  const listText = await page.locator('[data-testid="chat-message-list"]').innerText();
+  const treatedAsHex =
+    /HEX FRAME/i.test(listText) ||
+    /U_FRAME|SNRM|HDLC/i.test(listText) ||
+    /decode/i.test(listText);
+  expect(treatedAsHex).toBe(true);
+
+  fs.unlinkSync(tmpFile);
+});

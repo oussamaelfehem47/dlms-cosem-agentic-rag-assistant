@@ -61,16 +61,44 @@ public class ConversationService {
 
     public Mono<Message> saveMessage(UUID conversationId, UUID userId, String role, String inputClass,
                                       String intent, String rawInput, String decodeResultJson, String strategyMetadataJson,
+                                      String artifactResultsJson,
                                       String orchestrationMode, Boolean plannerUsed, String toolTraceJson,
                                       String plannerFallbackReason, String explanation, String sessionId,
                                       boolean usedMcpFallback, String explanationMode, String toolProvenance) {
         return resolveOwnedConversation(conversationId, userId)
                 .flatMap(conv -> messageRepository.save(
                         Message.create(conversationId, role, inputClass, intent,
-                                rawInput, decodeResultJson, strategyMetadataJson,
+                                rawInput, decodeResultJson, artifactResultsJson, strategyMetadataJson,
                                 orchestrationMode, plannerUsed, toolTraceJson, plannerFallbackReason,
                                 explanation, sessionId, usedMcpFallback, explanationMode, toolProvenance)
                 ));
+    }
+
+    public Mono<Message> saveMessage(UUID conversationId, UUID userId, String role, String inputClass,
+                                      String intent, String rawInput, String decodeResultJson, String strategyMetadataJson,
+                                      String orchestrationMode, Boolean plannerUsed, String toolTraceJson,
+                                      String plannerFallbackReason, String explanation, String sessionId,
+                                      boolean usedMcpFallback, String explanationMode, String toolProvenance) {
+        return saveMessage(
+                conversationId,
+                userId,
+                role,
+                inputClass,
+                intent,
+                rawInput,
+                decodeResultJson,
+                strategyMetadataJson,
+                null,
+                orchestrationMode,
+                plannerUsed,
+                toolTraceJson,
+                plannerFallbackReason,
+                explanation,
+                sessionId,
+                usedMcpFallback,
+                explanationMode,
+                toolProvenance
+        );
     }
 
     public Mono<Void> deleteConversation(UUID conversationId, UUID userId) {
@@ -106,6 +134,7 @@ public class ConversationService {
                 msg.intent(),
                 msg.rawInput(),
                 msg.decodeResultJson() == null ? null : msg.decodeResultJson().asString(),
+                msg.artifactResultsJson() == null ? null : msg.artifactResultsJson().asString(),
                 msg.strategyMetadataJson() == null ? null : msg.strategyMetadataJson().asString(),
                 msg.orchestrationMode(),
                 msg.plannerUsed(),

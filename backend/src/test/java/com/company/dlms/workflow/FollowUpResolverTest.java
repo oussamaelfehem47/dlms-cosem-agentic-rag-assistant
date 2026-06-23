@@ -363,6 +363,49 @@ class FollowUpResolverTest {
     }
 
     @Test
+    void lastObisRecallPrefersExactDescriptionFromStoredArtifactResults() {
+        WorkflowState state = WorkflowState.empty("s1", "c1", "what OBIS code was in the last response?")
+                .toBuilder()
+                .lastObis("1.0.1.8.0.255")
+                .recentArtifactResults(List.of(
+                        new ArtifactResultPayload(
+                                "artifact-3",
+                                2,
+                                ArtifactSource.PASTED_BLOCK,
+                                null,
+                                "C4020109060100010800FF",
+                                com.company.dlms.domain.InputClass.QUERY,
+                                com.company.dlms.domain.DlmsIntent.APDU_ANALYSIS,
+                                java.util.Map.of(
+                                        "apduType", "GET_RESPONSE",
+                                        "obisResolutions", List.of(java.util.Map.of(
+                                                "obis", "1.0.1.8.0.255",
+                                                "description", "Active energy import total"
+                                        ))
+                                ),
+                                null,
+                                "What it means: The payload decodes deterministically as GET_RESPONSE.",
+                                null,
+                                com.company.dlms.domain.orchestration.OrchestrationMode.DETERMINISTIC_FAST_PATH,
+                                false,
+                                List.of(),
+                                null,
+                                null,
+                                null
+                        )
+                ))
+                .build();
+
+        FollowUpResolver.FollowUpResolution resolution = resolver.resolve(state).orElseThrow();
+
+        assertThat(resolution.kind()).isEqualTo(FollowUpResolver.FollowUpKind.LAST_ENTITY_RECALL);
+        assertThat(resolution.resolvedFromContext()).isTrue();
+        assertThat(resolution.answer()).contains("1.0.1.8.0.255");
+        assertThat(resolution.answer()).contains("Active energy import total");
+        assertThat(resolution.answer()).doesNotContain("Electricity active energy import total");
+    }
+
+    @Test
     void payloadBearingApduPromptIsNotTreatedAsSessionFollowUp() {
         String prompt = "Decode APDU C4020109060100010800FF and explain what object was returned.";
 
@@ -374,5 +417,71 @@ class FollowUpResolverTest {
                 .build();
 
         assertThat(resolver.resolve(state)).isEmpty();
+    }
+
+    @Test
+    void artifactFollowUpUsesStoredBatchArtifactContext() {
+        WorkflowState state = WorkflowState.empty("s1", "c1", "explain artifact 2")
+                .toBuilder()
+                .recentArtifactResults(List.of(
+                        new ArtifactResultPayload(
+                                "artifact-1",
+                                0,
+                                ArtifactSource.PASTED_BLOCK,
+                                null,
+                                "7EA00A030383CD6F7E",
+                                com.company.dlms.domain.InputClass.HEX_FRAME,
+                                com.company.dlms.domain.DlmsIntent.FRAME_DECODE,
+                                java.util.Map.of(
+                                        "hdlcFrame", java.util.Map.of(
+                                                "frameType", "U_FRAME",
+                                                "uFrameType", "SNRM"
+                                        )
+                                ),
+                                null,
+                                "What it means: This is an HDLC Set Normal Response Mode control frame.",
+                                null,
+                                com.company.dlms.domain.orchestration.OrchestrationMode.DETERMINISTIC_FAST_PATH,
+                                false,
+                                List.of(),
+                                null,
+                                null,
+                                null
+                        ),
+                        new ArtifactResultPayload(
+                                "artifact-2",
+                                1,
+                                ArtifactSource.PASTED_BLOCK,
+                                null,
+                                "03 01",
+                                com.company.dlms.domain.InputClass.QUERY,
+                                com.company.dlms.domain.DlmsIntent.APDU_ANALYSIS,
+                                java.util.Map.of(
+                                        "axdrTree", java.util.Map.of(
+                                                "type", "boolean",
+                                                "value", true
+                                        )
+                                ),
+                                null,
+                                "What it means: The payload decodes as AXDR boolean true in raw AXDR form without an APDU or HDLC envelope.",
+                                null,
+                                com.company.dlms.domain.orchestration.OrchestrationMode.DETERMINISTIC_FAST_PATH,
+                                false,
+                                List.of(),
+                                null,
+                                null,
+                                null
+                        )
+                ))
+                .build();
+
+        FollowUpResolver.FollowUpResolution resolution = resolver.resolve(state).orElseThrow();
+
+        assertThat(resolution.kind()).isEqualTo(FollowUpResolver.FollowUpKind.ARTIFACT_RECALL);
+        assertThat(resolution.resolvedFromContext()).isTrue();
+        assertThat(resolution.answer()).contains("Artifact 2");
+        assertThat(resolution.answer()).contains("AXDR boolean `true`");
+        assertThat(resolution.answer()).contains("stored structured result");
+        assertThat(resolution.answer()).contains("The payload decodes as AXDR boolean true");
     }
 }

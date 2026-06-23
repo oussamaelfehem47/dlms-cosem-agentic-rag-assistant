@@ -42,7 +42,7 @@ class OllamaStreamingClientTest {
         WebClient webClient = WebClient.builder()
                 .baseUrl("http://localhost:" + wireMockServer.port())
                 .build();
-        client = new OllamaStreamingClient(webClient, new ObjectMapper(), "lfm2.5-thinking:latest", PROMPT_ASSEMBLER);
+        client = new OllamaStreamingClient(webClient, new ObjectMapper(), "qwen2.5:3b", PROMPT_ASSEMBLER);
     }
 
     @AfterEach
@@ -97,7 +97,7 @@ class OllamaStreamingClientTest {
                 .baseUrl("http://localhost:19999")
                 .build();
         OllamaStreamingClient offlineClient = new OllamaStreamingClient(
-                webClient, new ObjectMapper(), "lfm2.5-thinking:latest", PROMPT_ASSEMBLER);
+                webClient, new ObjectMapper(), "qwen2.5:3b", PROMPT_ASSEMBLER);
 
         StepVerifier.create(offlineClient.stream("prompt"))
                 .expectNextMatches(token -> token.startsWith("[Ollama unavailable:"))
@@ -115,7 +115,7 @@ class OllamaStreamingClientTest {
         ExchangeFunction exchange = req -> Mono.never();
         WebClient webClient = WebClient.builder().exchangeFunction(exchange).build();
         OllamaStreamingClient timeoutClient = new OllamaStreamingClient(
-                webClient, new ObjectMapper(), "lfm2.5-thinking:latest", PROMPT_ASSEMBLER);
+                webClient, new ObjectMapper(), "qwen2.5:3b", PROMPT_ASSEMBLER);
 
         StepVerifier.withVirtualTime(() -> timeoutClient.stream("prompt"))
                 .thenAwait(Duration.ofSeconds(61))

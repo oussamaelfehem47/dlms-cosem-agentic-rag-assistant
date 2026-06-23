@@ -1,6 +1,7 @@
 package com.company.dlms.workflow;
 
 import com.company.dlms.domain.CasualQueryClassifier;
+import com.company.dlms.domain.InputClass;
 import com.company.dlms.domain.answer.AnswerMode;
 import com.company.dlms.domain.answer.AnswerTopicFamily;
 import com.company.dlms.domain.answer.ExplanationMode;
@@ -48,6 +49,7 @@ import com.company.dlms.infrastructure.llm.GroundedFactBundleBuilder;
 import com.company.dlms.infrastructure.llm.ThinkTagFilter;
 import com.company.dlms.infrastructure.security.OutputFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.codec.ServerSentEvent;
@@ -71,6 +73,9 @@ public class StreamingWorkflowService {
 
     @NonNull private final WorkflowOrchestrator orchestrator;
     @NonNull private final HybridAgenticPlannerService hybridAgenticPlannerService;
+    @NonNull private final InputUnderstandingService inputUnderstandingService;
+    @NonNull private final TurnArtifactExtractionService turnArtifactExtractionService;
+    @NonNull private final MultiArtifactTurnOrchestrator multiArtifactTurnOrchestrator;
     @NonNull private final GroundedAnswerBuilder groundedAnswerBuilder;
     @NonNull private final FollowUpResolver followUpResolver;
     @NonNull private final PromptAssembler promptAssembler;
@@ -81,6 +86,41 @@ public class StreamingWorkflowService {
     @NonNull private final MathMarkupFilter mathMarkupFilter;
     @NonNull private final OutputFilter outputFilter;
     @NonNull private final ObjectMapper objectMapper;
+
+    @Autowired
+    public StreamingWorkflowService(
+            @NonNull WorkflowOrchestrator orchestrator,
+            @NonNull HybridAgenticPlannerService hybridAgenticPlannerService,
+            @NonNull InputUnderstandingService inputUnderstandingService,
+            @NonNull TurnArtifactExtractionService turnArtifactExtractionService,
+            @NonNull MultiArtifactTurnOrchestrator multiArtifactTurnOrchestrator,
+            @NonNull GroundedAnswerBuilder groundedAnswerBuilder,
+            @NonNull FollowUpResolver followUpResolver,
+            @NonNull PromptAssembler promptAssembler,
+            @NonNull GroundedFactBundleBuilder groundedFactBundleBuilder,
+            @NonNull GroundedAnswerQualityGate groundedAnswerQualityGate,
+            @NonNull OllamaStreamingClient ollamaStreamingClient,
+            @NonNull ThinkTagFilter thinkTagFilter,
+            @NonNull MathMarkupFilter mathMarkupFilter,
+            @NonNull OutputFilter outputFilter,
+            @NonNull ObjectMapper objectMapper
+    ) {
+        this.orchestrator = Objects.requireNonNull(orchestrator, "orchestrator");
+        this.hybridAgenticPlannerService = Objects.requireNonNull(hybridAgenticPlannerService, "hybridAgenticPlannerService");
+        this.inputUnderstandingService = Objects.requireNonNull(inputUnderstandingService, "inputUnderstandingService");
+        this.turnArtifactExtractionService = Objects.requireNonNull(turnArtifactExtractionService, "turnArtifactExtractionService");
+        this.multiArtifactTurnOrchestrator = Objects.requireNonNull(multiArtifactTurnOrchestrator, "multiArtifactTurnOrchestrator");
+        this.groundedAnswerBuilder = Objects.requireNonNull(groundedAnswerBuilder, "groundedAnswerBuilder");
+        this.followUpResolver = Objects.requireNonNull(followUpResolver, "followUpResolver");
+        this.promptAssembler = Objects.requireNonNull(promptAssembler, "promptAssembler");
+        this.groundedFactBundleBuilder = Objects.requireNonNull(groundedFactBundleBuilder, "groundedFactBundleBuilder");
+        this.groundedAnswerQualityGate = Objects.requireNonNull(groundedAnswerQualityGate, "groundedAnswerQualityGate");
+        this.ollamaStreamingClient = Objects.requireNonNull(ollamaStreamingClient, "ollamaStreamingClient");
+        this.thinkTagFilter = Objects.requireNonNull(thinkTagFilter, "thinkTagFilter");
+        this.mathMarkupFilter = Objects.requireNonNull(mathMarkupFilter, "mathMarkupFilter");
+        this.outputFilter = Objects.requireNonNull(outputFilter, "outputFilter");
+        this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
+    }
 
     public StreamingWorkflowService(
             @NonNull WorkflowOrchestrator orchestrator,
@@ -96,18 +136,41 @@ public class StreamingWorkflowService {
             @NonNull OutputFilter outputFilter,
             @NonNull ObjectMapper objectMapper
     ) {
-        this.orchestrator = Objects.requireNonNull(orchestrator, "orchestrator");
-        this.hybridAgenticPlannerService = Objects.requireNonNull(hybridAgenticPlannerService, "hybridAgenticPlannerService");
-        this.groundedAnswerBuilder = Objects.requireNonNull(groundedAnswerBuilder, "groundedAnswerBuilder");
-        this.followUpResolver = Objects.requireNonNull(followUpResolver, "followUpResolver");
-        this.promptAssembler = Objects.requireNonNull(promptAssembler, "promptAssembler");
-        this.groundedFactBundleBuilder = Objects.requireNonNull(groundedFactBundleBuilder, "groundedFactBundleBuilder");
-        this.groundedAnswerQualityGate = Objects.requireNonNull(groundedAnswerQualityGate, "groundedAnswerQualityGate");
-        this.ollamaStreamingClient = Objects.requireNonNull(ollamaStreamingClient, "ollamaStreamingClient");
-        this.thinkTagFilter = Objects.requireNonNull(thinkTagFilter, "thinkTagFilter");
-        this.mathMarkupFilter = Objects.requireNonNull(mathMarkupFilter, "mathMarkupFilter");
-        this.outputFilter = Objects.requireNonNull(outputFilter, "outputFilter");
-        this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
+        this(
+                orchestrator,
+                hybridAgenticPlannerService,
+                new InputUnderstandingService(
+                        new com.company.dlms.agent.dlms.DlmsInputNormalizer(),
+                        new com.company.dlms.agent.siconia.SiconiaInputNormalizer(),
+                        new com.company.dlms.agent.RouterAgent(),
+                        followUpResolver
+                ),
+                new TurnArtifactExtractionService(
+                        new com.company.dlms.agent.dlms.DlmsInputNormalizer(),
+                        new com.company.dlms.agent.siconia.SiconiaInputNormalizer()
+                ),
+                new MultiArtifactTurnOrchestrator(
+                        new InputUnderstandingService(
+                                new com.company.dlms.agent.dlms.DlmsInputNormalizer(),
+                                new com.company.dlms.agent.siconia.SiconiaInputNormalizer(),
+                                new com.company.dlms.agent.RouterAgent(),
+                                followUpResolver
+                        ),
+                        orchestrator,
+                        hybridAgenticPlannerService,
+                        new TurnSynthesisPlannerService(ollamaStreamingClient, outputFilter)
+                ),
+                groundedAnswerBuilder,
+                followUpResolver,
+                promptAssembler,
+                groundedFactBundleBuilder,
+                groundedAnswerQualityGate,
+                ollamaStreamingClient,
+                thinkTagFilter,
+                mathMarkupFilter,
+                outputFilter,
+                objectMapper
+        );
     }
 
     public Flux<ServerSentEvent<String>> streamDecode(@NonNull WorkflowRequest request) {
@@ -123,6 +186,53 @@ public class StreamingWorkflowService {
     }
 
     private Flux<ServerSentEvent<String>> streamWorkflow(@NonNull WorkflowRequest request, String firstType) {
+        TurnArtifactExtraction extraction = turnArtifactExtractionService.extract(request);
+        if (extraction.tooManyArtifacts()) {
+            return streamTooManyArtifacts(request, extraction);
+        }
+        if (shouldUseBatchPath(request, extraction)) {
+            return streamBatchWorkflow(request, extraction, firstType);
+        }
+        WorkflowRequest effectiveRequest = singleArtifactRequest(request, extraction);
+        return streamSingleWorkflow(effectiveRequest, firstType);
+    }
+
+    private boolean shouldUseBatchPath(@NonNull WorkflowRequest request, @NonNull TurnArtifactExtraction extraction) {
+        if (extraction.isBatch()) {
+            return true;
+        }
+        return request.artifacts() != null
+                && request.artifacts().size() > 1;
+    }
+
+    private WorkflowRequest singleArtifactRequest(@NonNull WorkflowRequest request, @NonNull TurnArtifactExtraction extraction) {
+        if (!extraction.hasSingleArtifact() || !extraction.explicitArtifacts()) {
+            return request;
+        }
+        TurnArtifact artifact = extraction.artifacts().getFirst();
+        String artifactRawInput = extraction.turnInstruction() == null || extraction.turnInstruction().isBlank()
+                ? artifact.text().trim()
+                : artifact.text().trim() + "\n\n" + extraction.turnInstruction().trim();
+        InputClass hintedInputClass = artifact.hintedInputClass() != null
+                ? artifact.hintedInputClass()
+                : (request.inputClass() == null ? InputClass.QUERY : request.inputClass());
+        InputUnderstanding understanding = inputUnderstandingService.understand(artifactRawInput, hintedInputClass);
+        return new WorkflowRequest(
+                request.sessionId(),
+                request.conversationId(),
+                artifactRawInput,
+                List.of(),
+                request.userRole(),
+                understanding.inputClass(),
+                understanding.intent(),
+                understanding.strategyMetadata(),
+                understanding.siconiaNormalization(),
+                understanding.dlmsNormalization(),
+                understanding.orchestrationMode()
+        );
+    }
+
+    private Flux<ServerSentEvent<String>> streamSingleWorkflow(@NonNull WorkflowRequest request, String firstType) {
         return orchestrator.executeRaw(request)
                 .flatMap(hybridAgenticPlannerService::applyIfNeeded)
                 .flatMapMany(result -> {
@@ -227,6 +337,252 @@ public class StreamingWorkflowService {
                         Mono.just(event("done", (Object) Map.of()))
                 ));
     }
+
+    private Flux<ServerSentEvent<String>> streamTooManyArtifacts(
+            @NonNull WorkflowRequest request,
+            @NonNull TurnArtifactExtraction extraction
+    ) {
+        Map<String, Object> meta = new java.util.LinkedHashMap<>();
+        meta.put("sessionId", request.sessionId());
+        meta.put("inputClass", InputClass.QUERY.name());
+        meta.put("intent", com.company.dlms.domain.DlmsIntent.UNKNOWN.name());
+        meta.put("orchestrationMode", com.company.dlms.domain.orchestration.OrchestrationMode.AMBIGUOUS_SAFE_FALLBACK.name());
+        meta.put("plannerUsed", false);
+        meta.put("strategyMetadata", serializeToRawMap(new StrategyMetadata(
+                StrategyKey.UNKNOWN,
+                "Multi-artifact turn",
+                0.0,
+                true,
+                true,
+                List.of(),
+                List.of("More than " + TurnArtifactExtractionService.MAX_ARTIFACTS + " artifacts were detected in one turn.")
+        )));
+
+        String response = "What happened: I detected more than " + TurnArtifactExtractionService.MAX_ARTIFACTS
+                + " separate artifacts in this turn.\n"
+                + "Can I trust it: Not yet. Processing that many artifacts together would make the turn unsafe to summarize deterministically.\n"
+                + "Next step: Split the request into smaller batches of up to " + TurnArtifactExtractionService.MAX_ARTIFACTS
+                + " artifacts so each decode or analysis can be kept grounded.\n";
+
+        return Flux.concat(
+                Mono.just(event("decode", meta)),
+                emitVisibleText(response),
+                Mono.just(event("done", (Object) Map.of()))
+        );
+    }
+
+    private Flux<ServerSentEvent<String>> streamBatchWorkflow(
+            @NonNull WorkflowRequest request,
+            @NonNull TurnArtifactExtraction extraction,
+            String firstType
+    ) {
+        return multiArtifactTurnOrchestrator.execute(request, extraction)
+                .flatMapMany(batch -> Flux.fromIterable(batch.artifactStates())
+                        .concatMap(this::prepareSafeState)
+                        .collectList()
+                        .flatMap(safeStates -> Flux.range(0, safeStates.size())
+                                .concatMap(index -> toArtifactResultPayload(extraction.artifacts().get(index), index, safeStates.get(index)))
+                                .collectList()
+                                .map(artifactResults -> new BatchPreparedPayload(batch, artifactResults)))
+                        .flatMapMany(prepared -> {
+                            Map<String, Object> meta = new java.util.LinkedHashMap<>();
+                            meta.put("sessionId", prepared.batch().sessionId());
+                            meta.put("inputClass", InputClass.QUERY.name());
+                            meta.put("intent", null);
+                            meta.put("orchestrationMode", prepared.batch().orchestrationMode().name());
+                            meta.put("plannerUsed", prepared.batch().plannerUsed());
+                            meta.put("strategyMetadata", serializeToRawMap(prepared.batch().strategyMetadata()));
+                            if (prepared.batch().toolTrace() != null && !prepared.batch().toolTrace().isEmpty()) {
+                                meta.put("toolTrace", prepared.batch().toolTrace().stream().map(this::serializeToRawMap).toList());
+                            }
+                            if (prepared.batch().plannerFallbackReason() != null && !prepared.batch().plannerFallbackReason().isBlank()) {
+                                meta.put("plannerFallbackReason", prepared.batch().plannerFallbackReason());
+                            }
+                            meta.put("artifactResults", prepared.artifactResults().stream().map(this::serializeToRawMap).toList());
+
+                            String eventType = firstType == null || firstType.isBlank() ? "decode" : firstType;
+                            String summaryText = prepared.batch().summaryText() == null ? "" : prepared.batch().summaryText();
+
+                            return Flux.concat(
+                                    Mono.just(event(eventType, meta)),
+                                    summaryText.isBlank() ? Flux.empty() : emitVisibleText(summaryText),
+                                    Mono.just(event("done", (Object) Map.of()))
+                            );
+                        }))
+                .onErrorResume(ex -> Flux.concat(
+                        Mono.just(event("filtered", (Object) Map.of("reason", "stream_failed"))),
+                        Mono.just(event("done", (Object) Map.of()))
+                ));
+    }
+
+    private Mono<WorkflowState> prepareSafeState(@NonNull WorkflowState result) {
+        WorkflowState safeResult = Objects.requireNonNull(result, "workflowResult")
+                .withGroundedAnswerContext(groundedAnswerBuilder.build(result));
+        return Mono.just(safeResult);
+    }
+
+    private Mono<ArtifactResultPayload> toArtifactResultPayload(
+            @NonNull TurnArtifact artifact,
+            int index,
+            @NonNull WorkflowState state
+    ) {
+        ArtifactNarration deterministicNarration = artifactDeterministicNarration(state);
+        Mono<ArtifactNarration> narrationMono = deterministicNarration != null
+                ? Mono.just(deterministicNarration)
+                : answerTextForState(state)
+                    .defaultIfEmpty("")
+                    .map(explanation -> new ArtifactNarration(
+                            explanation,
+                            determineExplanationMode(state, shouldUseFallback(state))
+                    ));
+
+        return narrationMono.map(narration -> new ArtifactResultPayload(
+                        artifact.artifactId(),
+                        index,
+                        artifact.source(),
+                        artifact.filename(),
+                        artifact.text(),
+                        state.inputClass(),
+                        state.intent(),
+                        serializeStructuredDecode(state),
+                        serializeStructuredSiconia(state),
+                        narration.text(),
+                        state.strategyMetadata(),
+                        state.orchestrationMode(),
+                        state.plannerUsed(),
+                        state.toolTrace(),
+                        state.plannerFallbackReason(),
+                        narration.explanationMode(),
+                        determineToolProvenance(state)
+                ));
+    }
+
+    private ArtifactNarration artifactDeterministicNarration(@NonNull WorkflowState state) {
+        String deterministicStructured = deterministicStructuredResponse(state);
+        if (deterministicStructured != null && !deterministicStructured.isBlank()) {
+            return new ArtifactNarration(deterministicStructured, ExplanationMode.DETERMINISTIC_ONLY);
+        }
+
+        if (state.decodeResult() instanceof DecodeResult dr) {
+            if (shouldUseFallback(state)) {
+                return new ArtifactNarration(fallbackResponseText(state, dr), ExplanationMode.DETERMINISTIC_ONLY);
+            }
+            String deterministicDecode = groundedDeterministicDecodeResponse(state, dr);
+            if (deterministicDecode != null && !deterministicDecode.isBlank()) {
+                return new ArtifactNarration(deterministicDecode, ExplanationMode.DETERMINISTIC_ONLY);
+            }
+        }
+
+        if (state.siconiaResult() != null) {
+            String deterministicSiconia = groundedDeterministicSiconiaResponse(state.siconiaResult());
+            if (deterministicSiconia != null && !deterministicSiconia.isBlank()) {
+                return new ArtifactNarration(deterministicSiconia, ExplanationMode.DETERMINISTIC_ONLY);
+            }
+        }
+
+        return null;
+    }
+
+    private Object serializeStructuredDecode(@NonNull WorkflowState state) {
+        if (!(state.decodeResult() instanceof DecodeResult dr)) {
+            return null;
+        }
+        Map<String, Object> decodeMap = new java.util.LinkedHashMap<>(serializeToRawMap(dr));
+        if (dr.axdrTree() != null) {
+            decodeMap.put("axdrTree", serializeAxdrForUi(dr.axdrTree()));
+        }
+        if (state.profileResult() != null) {
+            decodeMap.put("profileResult", serializeToRawMap(state.profileResult()));
+        }
+        return decodeMap;
+    }
+
+    private Object serializeStructuredSiconia(@NonNull WorkflowState state) {
+        if (state.siconiaResult() == null) {
+            return null;
+        }
+        return serializeToRawMap(state.siconiaResult());
+    }
+
+    private Mono<String> answerTextForState(@NonNull WorkflowState state) {
+        String deterministic = deterministicStructuredResponse(state);
+        if (deterministic != null) {
+            return Mono.just(deterministic);
+        }
+
+        boolean fallback = shouldUseFallback(state);
+        ExplanationMode explanationMode = determineExplanationMode(state, fallback);
+        String systemPrompt = Objects.requireNonNull(promptAssembler.systemPrompt(state), "systemPrompt");
+        String prompt = Objects.requireNonNull(promptAssembler.assemble(state), "prompt");
+
+        if (explanationMode == ExplanationMode.GROUNDED_LLM || explanationMode == ExplanationMode.TENTATIVE_GROUNDED) {
+            GroundedFactBundle bundle = groundedFactBundleBuilder.build(state);
+            return safeOllamaStream(systemPrompt, prompt)
+                    .transform(thinkTagFilter::filter)
+                    .transform(mathMarkupFilter::filter)
+                    .take(Duration.ofSeconds(60))
+                    .collectList()
+                    .map(tokens -> selectGroundedDeterministicAnswerText(state, bundle, String.join("", tokens)));
+        }
+        if (fallback && state.decodeResult() instanceof DecodeResult dr) {
+            return Mono.just(fallbackResponseText(state, dr));
+        }
+        if (state.groundedAnswerContext() != null
+                && state.groundedAnswerContext().mode() == AnswerMode.DETERMINISTIC_DECODE
+                && state.decodeResult() instanceof DecodeResult dr) {
+            String text = groundedDeterministicDecodeResponse(state, dr);
+            if (text != null) {
+                return Mono.just(text);
+            }
+        }
+        if (state.groundedAnswerContext() != null
+                && state.groundedAnswerContext().mode() == AnswerMode.DETERMINISTIC_SICONIA) {
+            String text = groundedDeterministicSiconiaResponse(state.siconiaResult());
+            if (text != null) {
+                return Mono.just(text);
+            }
+        }
+        if (state.intent() == com.company.dlms.domain.DlmsIntent.FRAME_DECODE
+                && state.errors() != null
+                && !state.errors().isEmpty()) {
+            return Mono.just(frameDecodeErrorText(state.errors()));
+        }
+
+        return llmAnswerText(state, systemPrompt, prompt);
+    }
+
+    private Mono<String> llmAnswerText(
+            @NonNull WorkflowState state,
+            @NonNull String systemPrompt,
+            @NonNull String prompt
+    ) {
+        AnswerMode mode = state.groundedAnswerContext() == null ? null : state.groundedAnswerContext().mode();
+        if (mode == AnswerMode.RETRIEVAL_DOCS || mode == AnswerMode.RETRIEVAL_SECURITY) {
+            GroundedFactBundle bundle = groundedFactBundleBuilder.build(state);
+            return safeOllamaStream(systemPrompt, prompt)
+                    .transform(thinkTagFilter::filter)
+                    .transform(mathMarkupFilter::filter)
+                    .take(Duration.ofSeconds(60))
+                    .collectList()
+                    .map(tokens -> selectRetrievalAnswerText(state, bundle, String.join("", tokens)));
+        }
+        return safeOllamaStream(systemPrompt, prompt)
+                .transform(thinkTagFilter::filter)
+                .transform(mathMarkupFilter::filter)
+                .take(Duration.ofSeconds(60))
+                .collectList()
+                .map(tokens -> String.join("", tokens));
+    }
+
+    private record BatchPreparedPayload(
+            BatchTurnExecution batch,
+            List<ArtifactResultPayload> artifactResults
+    ) {}
+
+    private record ArtifactNarration(
+            String text,
+            ExplanationMode explanationMode
+    ) {}
 
     private Flux<ServerSentEvent<String>> contentEventsForAnswer(
             @NonNull WorkflowState state,
@@ -600,6 +956,10 @@ public class StreamingWorkflowService {
     }
 
     private Flux<ServerSentEvent<String>> generateFrameDecodeErrorResponse(List<String> errors) {
+        return emitVisibleText(frameDecodeErrorText(errors));
+    }
+
+    private String frameDecodeErrorText(List<String> errors) {
         String detail = errors == null || errors.isEmpty()
                 ? "No valid HDLC frame could be extracted from the input"
                 : errors.get(0);
@@ -608,7 +968,7 @@ public class StreamingWorkflowService {
         sb.append("Can I trust it: No structured frame decode was produced, so do not infer protocol meaning from the text.\n");
         sb.append("Next step: Paste only the hex frame, or wrap a single full 7E...7E frame in the request. ");
         sb.append("Parser detail: ").append(detail).append(".\n");
-        return emitVisibleText(sb.toString());
+        return sb.toString();
     }
 
     private String deterministicStructuredResponse(@NonNull WorkflowState state) {
@@ -668,9 +1028,9 @@ public class StreamingWorkflowService {
             if (dr.apduType() == ApduType.GET_RESPONSE) {
                 String obisDetail = firstObisDetail(dr);
                 return "What it means: The payload decodes deterministically as GET_RESPONSE, which is the server response to a prior GET_REQUEST, without an HDLC envelope.\n"
-                        + "Why it matters: The decoded APDU, AXDR, and OBIS fields describe the returned object structure directly, without relying on freeform inference."
+                        + "Why it matters: The decoded APDU, AXDR, and OBIS fields identify what object the response refers to and how the response is structured, without relying on freeform inference."
                         + (obisDetail == null ? "" : " The response includes " + obisDetail + ".") + "\n"
-                        + "Next step: Use the structured panel to inspect the response structure, AXDR content, and resolved OBIS details.\n";
+                        + "Next step: Use the structured panel to inspect the response structure, AXDR content, and resolved OBIS details before concluding that a concrete meter reading was returned.\n";
             }
             return "What it means: The payload decodes deterministically as " + apduType + " without an HDLC envelope.\n"
                     + "Why it matters: The decoded APDU, AXDR, and OBIS fields describe the DLMS operation directly, without relying on freeform inference.\n"

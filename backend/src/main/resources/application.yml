@@ -28,7 +28,7 @@ spring:
     ollama:
       base-url: http://${OLLAMA_HOST:localhost}:${OLLAMA_PORT:11434}
       chat:
-        model: ${OLLAMA_LLM_MODEL:lfm2.5-thinking}
+        model: ${OLLAMA_LLM_MODEL:qwen2.5:3b}
       embedding:
         model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
     vectorstore:

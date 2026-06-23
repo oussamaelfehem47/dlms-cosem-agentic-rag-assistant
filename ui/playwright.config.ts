@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  timeout: 120_000,      // 2 min per test — LLM (lfm2.5-thinking) can be slow
+  timeout: 120_000,      // 2 min per test - local inference can still be slow
   expect: { timeout: 30_000 },
   fullyParallel: false,  // serial: tests share real backend DB state
   retries: 1,
